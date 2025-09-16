@@ -9,8 +9,9 @@ body {
     height: 100vh;
     margin: 0;
 
+    background-color: #000; /* Aggiunto sfondo nero */
     background-image: url('https://digilander.libero.it/thelistener/vintage/computing/casio-pb770/casio770_file/pb770grandej.jpg');
-    background-size: 50%; /* Immagine ridotta al 50% */
+    background-size: 35%;   /* Immagine ridotta al 35% */
     background-position: center;
     background-repeat: no-repeat;
 }
@@ -25,7 +26,7 @@ body {
     text-align: center;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
     backdrop-filter: blur(2px);
-    display: flex; /* Flexbox per centrare i contenuti interni */
+    display: flex;
     flex-direction: column;
     justify-content: space-between;
 }
