@@ -8,12 +8,11 @@ body {
     align-items: center;
     height: 100vh;
     margin: 0;
-    /* --- SFONDO NERO FISSO --- */
     background-color: #000; 
 }
 
 #game-container {
-    background-color: rgba(27, 38, 59, 0.95); 
+    background-color: #1b263b; 
     border: 2px solid #415a77;
     border-radius: 10px;
     padding: 20px;
@@ -21,32 +20,49 @@ body {
     max-width: 400px;
     text-align: center;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    backdrop-filter: blur(2px);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
 }
 
-/* --- NUOVO STILE PER L'IMMAGINE INTERNA --- */
+/* --- Sezione per il corpo del Casio e il posizionamento --- */
+#casio-body {
+    position: relative; /* Contesto per il posizionamento assoluto dello schermo */
+    margin: 0 auto;
+}
+
 .header-image {
     width: 100%;
-    max-width: 300px; /* Controlla la dimensione massima */
+    max-width: 390px; /* Aumentato del 30% circa */
     height: auto;
-    margin: 0 auto 15px auto; /* Centra l'immagine e aggiunge spazio sotto */
-    border-radius: 5px;
-    border: 1px solid #415a77;
+    display: block; /* Rimuove spazi extra sotto l'immagine */
+}
+
+/* --- Lo schermo virtuale sovrapposto --- */
+#screen-overlay {
+    position: absolute;
+    top: 28%;    /* Distanza dall'alto */
+    left: 13%;   /* Distanza da sinistra */
+    width: 74%;  /* Larghezza dello schermo */
+    height: 45%; /* Altezza dello schermo */
+    
+    background-color: rgba(14, 45, 5, 0.75); /* Colore verde LCD scuro, semi-trasparente */
+    border-radius: 3px;
+    padding: 5px;
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around; /* Distribuisce gli elementi verticalmente */
+    box-sizing: border-box; /* Include padding e bordi nel calcolo delle dimensioni */
 }
 
 h1 {
     color: #778da9;
-    font-size: 2.5em; /* Leggermente ridotto per bilanciare con l'immagine */
-    margin: 0;
+    font-size: 2.5em;
+    margin-bottom: 5px;
 }
 
 .subtitle {
     color: #415a77;
     margin-top: 0;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 .version {
@@ -57,94 +73,100 @@ h1 {
 #info-bar {
     display: flex;
     justify-content: space-between;
-    font-size: 1.2em;
-    margin-bottom: 20px;
-    padding: 10px;
-    background-color: #0d1b2a;
-    border-radius: 5px;
+    font-size: 1em; /* Ridotto per entrare nello schermo */
+    margin: 0;
+    padding: 2px 5px;
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 3px;
 }
 
 #hand-display {
     display: flex;
     justify-content: space-around;
-    margin-bottom: 20px;
+    margin: 5px 0;
 }
 
 .card {
-    width: 50px;
-    height: 70px;
-    border: 2px solid #778da9;
+    width: 18%; /* Usa percentuale per adattarsi allo schermo */
+    height: 45px; /* Altezza fissa */
+    border: 1px solid #778da9;
     background-color: #e0e1dd;
     color: #0d1b2a;
-    font-size: 2.5em;
+    font-size: 1.8em; /* Ridotto */
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 5px;
+    border-radius: 3px;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .card.selected {
     border-color: #ffca3a;
-    transform: translateY(-10px);
-    box-shadow: 0 10px 15px rgba(255, 202, 58, 0.3);
+    transform: translateY(-5px);
 }
 
 #message-box {
-    min-height: 40px;
-    font-size: 1.2em;
+    min-height: 20px;
+    font-size: 1em; /* Ridotto */
     color: #ffca3a;
+    margin: 5px 0;
 }
 
 button {
-    font-family: 'VT323', monospace;
-    font-size: 1.5em;
-    padding: 10px 20px;
+    font-size: 1.1em; /* Ridotto */
+    padding: 5px 10px;
     background-color: #778da9;
     color: #e0e1dd;
     border: none;
-    border-radius: 5px;
+    border-radius: 3px;
     cursor: pointer;
-    margin-top: 10px;
-    transition: background-color 0.2s;
+    margin-top: 5px;
 }
 
 button:hover {
     background-color: #415a77;
 }
 
-/* Stili per le nuove sezioni */
+/* Stili per le sezioni interne allo schermo */
 .game-section {
-    margin-bottom: 20px;
+    width: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 #player-name {
-    font-family: 'VT323', monospace;
-    background-color: #e0e1dd;
-    color: #0d1b2a;
-    border: 2px solid #778da9;
-    padding: 8px;
-    border-radius: 5px;
-    width: calc(100% - 20px);
-    max-width: 200px;
-    text-align: center;
-    margin-bottom: 10px;
+    padding: 4px;
+    width: 80%;
+    margin-bottom: 5px;
+    font-size: 1em;
+}
+
+#leaderboard-section h2 {
+    font-size: 1.2em;
+    margin: 0 0 5px 0;
+    color: #778da9;
 }
 
 #leaderboard-list {
     list-style: none;
-    padding: 0;
-    margin-top: 10px;
-    background-color: #0d1b2a;
-    border-radius: 5px;
-    padding: 10px;
+    padding: 0 5px;
+    margin: 0;
+    width: 100%;
+    background-color: transparent;
+    border-radius: 3px;
 }
 
 #leaderboard-list li {
-    font-size: 1.1em;
-    padding: 5px 0;
+    font-size: 0.9em;
+    padding: 2px 0;
     border-bottom: 1px dotted #415a77;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 #leaderboard-list li:last-child {
@@ -154,5 +176,5 @@ button:hover {
 #leaderboard-list li.top-score {
     color: #ffca3a;
     font-weight: bold;
-    font-size: 1.3em;
+    font-size: 1em;
 }
