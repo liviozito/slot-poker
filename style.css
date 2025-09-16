@@ -9,9 +9,8 @@ body {
     height: 100vh;
     margin: 0;
 
-    /* --- IMMAGINE DI SFONDO FORNITA DA TE --- */
     background-image: url('https://digilander.libero.it/thelistener/vintage/computing/casio-pb770/casio770_file/pb770grandej.jpg');
-    background-size: cover;
+    background-size: 50%; /* Immagine ridotta al 50% */
     background-position: center;
     background-repeat: no-repeat;
 }
@@ -26,6 +25,9 @@ body {
     text-align: center;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
     backdrop-filter: blur(2px);
+    display: flex; /* Flexbox per centrare i contenuti interni */
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 h1 {
@@ -40,7 +42,6 @@ h1 {
     margin-bottom: 20px;
 }
 
-/* Stile per il numero di versione */
 .version {
     color: #e0e1dd;
     font-size: 0.8em;
@@ -104,4 +105,47 @@ button {
 
 button:hover {
     background-color: #415a77;
+}
+
+/* Stili per le nuove sezioni */
+.game-section {
+    margin-bottom: 20px;
+}
+
+#player-name {
+    font-family: 'VT323', monospace;
+    background-color: #e0e1dd;
+    color: #0d1b2a;
+    border: 2px solid #778da9;
+    padding: 8px;
+    border-radius: 5px;
+    width: calc(100% - 20px);
+    max-width: 200px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+#leaderboard-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+    background-color: #0d1b2a;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+#leaderboard-list li {
+    font-size: 1.1em;
+    padding: 5px 0;
+    border-bottom: 1px dotted #415a77;
+}
+
+#leaderboard-list li:last-child {
+    border-bottom: none;
+}
+
+#leaderboard-list li.top-score {
+    color: #ffca3a;
+    font-weight: bold;
+    font-size: 1.3em;
 }
