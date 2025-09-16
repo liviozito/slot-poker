@@ -9,15 +9,14 @@ body {
     height: 100vh;
     margin: 0;
 
-    /* --- MODIFICHE PER LO SFONDO --- */
-    background-image: url('http://googleusercontent.com/image_collection/image_retrieval/18305045268821654035_0');
-    background-size: cover; /* Copre tutto lo schermo */
-    background-position: center; /* Centra l'immagine */
+    /* --- IMMAGINE DI SFONDO CORRETTA --- */
+    background-image: url('https://www.old-computers.com/museum/photos/Casio_PB700_System_1.jpg');
+    background-size: cover;
+    background-position: center;
     background-repeat: no-repeat;
 }
 
 #game-container {
-    /* Aggiunto un overlay semi-trasparente per migliorare la leggibilità */
     background-color: rgba(27, 38, 59, 0.9); 
     border: 2px solid #415a77;
     border-radius: 10px;
@@ -26,7 +25,6 @@ body {
     max-width: 400px;
     text-align: center;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    /* Aggiunto per evitare che l'immagine di sfondo "sfori" */
     backdrop-filter: blur(2px);
 }
 
@@ -40,6 +38,12 @@ h1 {
     color: #415a77;
     margin-top: 0;
     margin-bottom: 20px;
+}
+
+/* Stile per il numero di versione */
+.version {
+    color: #e0e1dd;
+    font-size: 0.8em;
 }
 
 #info-bar {
