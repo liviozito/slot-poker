@@ -8,16 +8,12 @@ body {
     align-items: center;
     height: 100vh;
     margin: 0;
-
-    background-color: #000; /* Aggiunto sfondo nero */
-    background-image: url('https://digilander.libero.it/thelistener/vintage/computing/casio-pb770/casio770_file/pb770grandej.jpg');
-    background-size: 35%;   /* Immagine ridotta al 35% */
-    background-position: center;
-    background-repeat: no-repeat;
+    /* --- SFONDO NERO FISSO --- */
+    background-color: #000; 
 }
 
 #game-container {
-    background-color: rgba(27, 38, 59, 0.9); 
+    background-color: rgba(27, 38, 59, 0.95); 
     border: 2px solid #415a77;
     border-radius: 10px;
     padding: 20px;
@@ -31,9 +27,19 @@ body {
     justify-content: space-between;
 }
 
+/* --- NUOVO STILE PER L'IMMAGINE INTERNA --- */
+.header-image {
+    width: 100%;
+    max-width: 300px; /* Controlla la dimensione massima */
+    height: auto;
+    margin: 0 auto 15px auto; /* Centra l'immagine e aggiunge spazio sotto */
+    border-radius: 5px;
+    border: 1px solid #415a77;
+}
+
 h1 {
     color: #778da9;
-    font-size: 3em;
+    font-size: 2.5em; /* Leggermente ridotto per bilanciare con l'immagine */
     margin: 0;
 }
 
