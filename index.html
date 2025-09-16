@@ -9,28 +9,43 @@
 <body>
     <div id="game-container">
         <h1>Slot-Poker</h1>
-        <p class="subtitle">di Livio Zito - Computer News, Marzo 1988 <span class="version">v1.2</span></p>
+        <p class="subtitle">di Livio Zito - Computer News, Marzo 1988 <span class="version">v1.3</span></p>
         
-        <div id="info-bar">
-            <span id="hand-info">Mano: 1/5</span>
-            <span id="score-info">Punteggio: 0</span>
+        <div id="name-input-section" class="game-section">
+            <label for="player-name">Il tuo nome:</label>
+            <input type="text" id="player-name" maxlength="15" placeholder="Inserisci il tuo nome">
+            <button id="start-game-button">Inizia a Giocare</button>
         </div>
 
-        <div id="hand-display">
-            <div class="card" id="card-0"></div>
-            <div class="card" id="card-1"></div>
-            <div class="card" id="card-2"></div>
-            <div class="card" id="card-3"></div>
-            <div class="card" id="card-4"></div>
+        <div id="game-section" class="game-section" style="display: none;">
+            <div id="info-bar">
+                <span id="hand-info">Mano: 1/5</span>
+                <span id="score-info">Punteggio: 0</span>
+            </div>
+
+            <div id="hand-display">
+                <div class="card" id="card-0"></div>
+                <div class="card" id="card-1"></div>
+                <div class="card" id="card-2"></div>
+                <div class="card" id="card-3"></div>
+                <div class="card" id="card-4"></div>
+            </div>
+
+            <div id="message-box">
+                Seleziona le carte da cambiare e premi "Cambia"
+            </div>
+
+            <div id="controls">
+                <button id="change-button">Cambia Carte</button>
+                <button id="next-hand-button" style="display: none;">Prossima Mano</button>
+            </div>
         </div>
 
-        <div id="message-box">
-            Seleziona le carte da cambiare e premi "Cambia"
-        </div>
-
-        <div id="controls">
-            <button id="change-button">Cambia Carte</button>
-            <button id="next-hand-button" style="display: none;">Prossima Mano</button>
+        <div id="leaderboard-section" class="game-section">
+            <h2>Migliori Punteggi</h2>
+            <ul id="leaderboard-list">
+                </ul>
+            <button id="play-again-button" style="display: none;">Gioca Ancora</button>
         </div>
     </div>
 
