@@ -2,6 +2,10 @@
 // Aggiornato: 18 settembre 2025
 // Migliori 3 punteggi sempre visibili, leaderboard su Firebase, audio attivo di default
 // Rimosso audio dal pulsante </> per evitare errori di caricamento file
+// git status
+// git add .
+// git commit -m "Update finale prima del force push"
+// git push --force-with-lease
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -187,42 +191,49 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function initTerminalMode() {
-        function typeOutCode(code, element, speed = 15) { 
-            let i = 0; 
-            element.innerHTML = ''; 
-            const cursor = document.createElement('span'); 
-            cursor.className = 'blinking-cursor'; 
-            element.appendChild(cursor); 
-            function type() { 
-                if (i < code.length) { 
-                    element.insertBefore(document.createTextNode(code[i]), cursor); 
-                    i++; 
-                    typingInterval = setTimeout(type, speed); 
-                } 
+function initTerminalMode() {
+    function typeOutCode(code, element, speed = 15) { 
+        let i = 0; 
+        element.innerHTML = ''; 
+        const cursor = document.createElement('span'); 
+        cursor.className = 'blinking-cursor'; 
+        element.appendChild(cursor); 
+        function type() { 
+            if (i < code.length) { 
+                element.insertBefore(document.createTextNode(code[i]), cursor); 
+                i++; 
+                typingInterval = setTimeout(type, speed); 
             } 
-            type(); 
-        }
-        
-        sourceToggleButton.addEventListener('click', () => {
-            gameContainer.style.opacity = '0';
-            terminalOverlay.style.display = 'block';
-            setTimeout(() => terminalOverlay.style.opacity = '1', 10);
-            typeOutCode(original_basic_code, codeDisplay);
-            
-            // Rimosso completamente l'audio dal pulsante </>
-            console.log("Visualizzazione codice sorgente attivata");
-        });
-
-        closeTerminalButton.addEventListener('click', () => { 
-            clearTimeout(typingInterval); 
-            terminalOverlay.style.opacity = '0'; 
-            setTimeout(() => { 
-                terminalOverlay.style.display = 'none'; 
-                gameContainer.style.opacity = '1'; 
-            }, 500); 
-        });
+        } 
+        type(); 
     }
+    
+    // Crea l'audio che funziona
+    const matrixAudio = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
+    matrixAudio.volume = 0.5;
+    
+    sourceToggleButton.addEventListener('click', () => {
+        gameContainer.style.opacity = '0';
+        terminalOverlay.style.display = 'block';
+        setTimeout(() => terminalOverlay.style.opacity = '1', 10);
+        typeOutCode(original_basic_code, codeDisplay);
+        
+        // Suona l'audio che funziona!
+        if (!isMuted) {
+            matrixAudio.currentTime = 0;
+            matrixAudio.play().catch(e => console.warn("Errore audio:", e));
+        }
+    });
+
+    closeTerminalButton.addEventListener('click', () => { 
+        clearTimeout(typingInterval); 
+        terminalOverlay.style.opacity = '0'; 
+        setTimeout(() => { 
+            terminalOverlay.style.display = 'none'; 
+            gameContainer.style.opacity = '1'; 
+        }, 500); 
+    });
+}
 
     async function updateTopLeaderboard() {
         if (!topLeaderboard) return;
@@ -236,6 +247,39 @@ document.addEventListener('DOMContentLoaded', () => {
             topLeaderboard.appendChild(li);
         });
     }
+
+function playMatrixAudio() {
+    if (isMuted) return;
+    
+    if (!audioCtx) {
+        try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) { return; }
+    }
+    
+    const ctx = audioCtx;
+    const now = ctx.currentTime;
+    
+    const sequence = [
+        { freq: 1200, duration: 0.1, delay: 0 },
+        { freq: 800, duration: 0.05, delay: 0.15 },
+        { freq: 1000, duration: 0.05, delay: 0.25 },
+        { freq: 1500, duration: 0.2, delay: 0.35 },
+    ];
+    
+    sequence.forEach(note => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(note.freq, now + note.delay);
+        gain.gain.setValueAtTime(0.15, now + note.delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + note.delay + note.duration);
+        osc.start(now + note.delay);
+        osc.stop(now + note.delay + note.duration);
+    });
+}
 
     function init() {
         applyStyles();
