@@ -1,4 +1,47 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+    // --- PANNELLO DI CALIBRAZIONE (v2.4) ---
+    const screenConfig = {
+        top: 12,    // Spostato in alto del 10% (da 10 a 11, arrotondato)
+        left: 23,   // Spostato a destra del 10% (da 19 a 21, arrotondato)
+        width: 62,
+        height: 38.5, // Allungato del 10% (da 35 a 38.5)
+    };
+    const screenOverlay = document.getElementById('screen-overlay');
+
+    function applyStyles() {
+        screenOverlay.style.top = `${screenConfig.top}%`;
+        screenOverlay.style.left = `${screenConfig.left}%`;
+        screenOverlay.style.width = `${screenConfig.width}%`;
+        screenOverlay.style.height = `${screenConfig.height}%`;
+    }
+
+    function initTuningMode() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('tuning') !== 'true') return;
+
+        const panel = document.getElementById('tuning-panel');
+        panel.style.display = 'block';
+        panel.innerHTML = `
+            <div><strong>Pannello Calibrazione</strong></div>
+            <div><label for="top">Top:</label> <input type="range" id="top" min="0" max="100" value="${screenConfig.top}"> <span id="top-val">${screenConfig.top}%</span></div>
+            <div><label for="left">Left:</label> <input type="range" id="left" min="0" max="100" value="${screenConfig.left}"> <span id="left-val">${screenConfig.left}%</span></div>
+            <div><label for="width">Width:</label> <input type="range" id="width" min="0" max="100" value="${screenConfig.width}"> <span id="width-val">${screenConfig.width}%</span></div>
+            <div><label for="height">Height:</label> <input type="range" id="height" min="0" max="100" value="${screenConfig.height}"> <span id="height-val">${screenConfig.height}%</span></div>
+        `;
+
+        ['top', 'left', 'width', 'height'].forEach(prop => {
+            const slider = document.getElementById(prop);
+            const valueSpan = document.getElementById(`${prop}-val`);
+            slider.addEventListener('input', () => {
+                screenConfig[prop] = slider.value;
+                valueSpan.textContent = `${slider.value}%`;
+                applyStyles();
+            });
+        });
+    }
+    // --- FINE PANNELLO DI CALIBRAZIONE ---
+
     // --- Elementi dell'interfaccia ---
     const cardElements = Array.from({ length: 5 }, (_, i) => document.getElementById(`card-${i}`));
     const messageBox = document.getElementById('message-box');
@@ -10,18 +53,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerNameInput = document.getElementById('player-name');
     const leaderboardList = document.getElementById('leaderboard-list');
     const actionButton = document.getElementById('action-button');
-
-    // --- Variabili di stato del gioco ---
     const DECK = ['A', '2', '3', '4', '5', '6', '7', '8', '9', 'D', 'J', 'Q', 'K'];
     let currentHand = [];
     let handNumber = 1;
     let totalScore = 0;
     let playerName = '';
     let gamePhase = 'deal';
-    let drawCount = 0; // Contatore per i cambi carte
+    let drawCount = 0;
     const MAX_LEADERBOARD_ENTRIES = 3;
 
-    // --- Logica di valutazione (invariata) ---
     function evaluateHand(hand) {
         const counts = {};
         hand.forEach(card => { counts[card] = (counts[card] || 0) + 1; });
@@ -35,7 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return { name: "Carta Alta", points: 0 };
     }
 
-    // --- Funzioni di visualizzazione ---
     function updateDisplay() {
         handInfo.textContent = `Mano: ${handNumber}/5`;
         scoreInfo.textContent = `Punteggio: ${totalScore}`;
@@ -51,7 +90,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById(sectionId).style.display = 'flex';
     }
 
-    // --- Gestione Classifica e Nome Utente (LocalStorage) ---
     function getLeaderboard() {
         return JSON.parse(localStorage.getItem('slotPokerLeaderboard') || '[]').sort((a, b) => b.score - a.score);
     }
@@ -64,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         leaderboard.sort((a, b) => b.score - a.score);
         localStorage.setItem('slotPokerLeaderboard', JSON.stringify(leaderboard.slice(0, 10)));
     }
-    
+
     function displayLeaderboard() {
         const leaderboard = getLeaderboard();
         leaderboardList.innerHTML = '';
@@ -83,11 +121,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showNameScreen() {
+        const lastPlayerName = localStorage.getItem('slotPokerLastName');
+        if (lastPlayerName) {
+            playerNameInput.value = lastPlayerName;
+        }
         showSection('name-input-section');
         updateActionButton('Inizia a Giocare', startGame);
     }
 
-    // --- Funzione di Controllo del Pulsante Unico ---
     let currentAction = null;
     function updateActionButton(text, action) {
         actionButton.textContent = text;
@@ -98,8 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
         actionButton.addEventListener('click', currentAction);
         actionButton.style.display = 'inline-block';
     }
-    
-    // --- Funzioni di Gioco ---
+
     function startGame() {
         playerName = playerNameInput.value.trim();
         if (playerName === '') {
@@ -115,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function dealHand() {
         gamePhase = 'deal';
-        drawCount = 0; // Resetta il contatore dei cambi
+        drawCount = 0;
         currentHand = Array(5).fill(null).map(() => DECK[Math.floor(Math.random() * DECK.length)]);
         cardElements.forEach(card => card.classList.remove('selected'));
         updateDisplay();
@@ -125,22 +165,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function changeCards() {
         if (gamePhase !== 'deal') return;
-        
-        let changed = false;
         cardElements.forEach((card, index) => {
             if (card.classList.contains('selected')) {
                 currentHand[index] = DECK[Math.floor(Math.random() * DECK.length)];
-                changed = true;
             }
         });
-        
         cardElements.forEach(card => card.classList.remove('selected'));
         updateDisplay();
         drawCount++;
-
         if (drawCount < 2) {
             messageBox.textContent = '2° Cambio: Seleziona carte';
-            // L'azione del pulsante rimane "Cambia"
         } else {
             showResult();
         }
@@ -152,7 +186,6 @@ document.addEventListener('DOMContentLoaded', () => {
         totalScore += result.points;
         updateDisplay();
         messageBox.textContent = `Risultato: ${result.name} (+${result.points} p.)`;
-        
         if (handNumber < 5) {
             updateActionButton('Prossima Mano', () => {
                 handNumber++;
@@ -166,7 +199,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Gestione Eventi ---
     cardElements.forEach(card => card.addEventListener('click', () => {
         if (gamePhase === 'deal') card.classList.toggle('selected');
     }));
@@ -174,12 +206,13 @@ document.addEventListener('DOMContentLoaded', () => {
     playerNameInput.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
             event.preventDefault();
-            actionButton.click(); // Simula il click del pulsante di azione corrente
+            actionButton.click();
         }
     });
 
-    // --- Inizializzazione ---
     function init() {
+        applyStyles(); // Applica gli stili iniziali
+        initTuningMode(); // Attiva la modalità di calibrazione se richiesto
         const lastPlayerName = localStorage.getItem('slotPokerLastName');
         if (lastPlayerName) {
             playerNameInput.value = lastPlayerName;
