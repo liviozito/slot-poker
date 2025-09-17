@@ -1,21 +1,52 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- CONFIGURAZIONE FINALE DELLO SCHERMO (v2.5) ---
-    const screenConfig = {
-        top: 5,
-        left: 3,
-        width: 67,
-        height: 60,
-    };
+    // --- CONFIGURAZIONE E CALIBRAZIONE ---
+    const screenConfig = { top: 5, left: 3, width: 67, height: 60, zoom: 100 };
     const screenOverlay = document.getElementById('screen-overlay');
+    const gameContainer = document.getElementById('game-container');
 
     function applyStyles() {
         screenOverlay.style.top = `${screenConfig.top}%`;
         screenOverlay.style.left = `${screenConfig.left}%`;
         screenOverlay.style.width = `${screenConfig.width}%`;
-        screenOverlay.style.height = `${screenOverlay.height}%`;
+        screenOverlay.style.height = `${screenConfig.height}%`;
+        gameContainer.style.transform = `scale(${screenConfig.zoom / 100})`;
     }
-    // --- FINE CONFIGURAZIONE ---
+
+    function initTuningMode() {
+        const tuningToggle = document.getElementById('tuning-toggle-button');
+        const panel = document.getElementById('tuning-panel');
+        tuningToggle.addEventListener('click', () => {
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        });
+
+        panel.innerHTML = `
+            <div><strong>Pannello Calibrazione</strong></div>
+            <div><label for="top">Top:</label> <input type="range" id="top" min="0" max="100" value="${screenConfig.top}"> <span id="top-val">${screenConfig.top}%</span></div>
+            <div><label for="left">Left:</label> <input type="range" id="left" min="0" max="100" value="${screenConfig.left}"> <span id="left-val">${screenConfig.left}%</span></div>
+            <div><label for="width">Width:</label> <input type="range" id="width" min="0" max="100" value="${screenConfig.width}"> <span id="width-val">${screenConfig.width}%</span></div>
+            <div><label for="height">Height:</label> <input type="range" id="height" min="0" max="100" value="${screenConfig.height}"> <span id="height-val">${screenConfig.height}%</span></div>
+            <div><label for="zoom">Zoom:</label> <input type="range" id="zoom" min="50" max="150" value="${screenConfig.zoom}"> <span id="zoom-val">${screenConfig.zoom}%</span></div>
+        `;
+
+        ['top', 'left', 'width', 'height', 'zoom'].forEach(prop => {
+            const slider = document.getElementById(prop);
+            const valueSpan = document.getElementById(`${prop}-val`);
+            slider.addEventListener('input', () => {
+                screenConfig[prop] = slider.value;
+                valueSpan.textContent = `${slider.value}%`;
+                applyStyles();
+            });
+        });
+    }
+
+    // --- GESTIONE SUONI ---
+    const sounds = {
+        click: new Audio('https://cdn.freesound.org/previews/253/253886_4486188-lq.mp3'),
+        spin: new Audio('https://cdn.freesound.org/previews/399/399303_5121236-lq.mp3'),
+        win: new Audio('https://cdn.freesound.org/previews/270/270319_5121236-lq.mp3')
+    };
+    Object.values(sounds).forEach(sound => sound.volume = 0.5);
 
     // --- Elementi dell'interfaccia ---
     const cardElements = Array.from({ length: 5 }, (_, i) => document.getElementById(`card-${i}`));
@@ -134,30 +165,64 @@ document.addEventListener('DOMContentLoaded', () => {
         currentHand = Array(5).fill(null).map(() => DECK[Math.floor(Math.random() * DECK.length)]);
         cardElements.forEach(card => card.classList.remove('selected'));
         updateDisplay();
-        messageBox.textContent = '1° Cambio: Seleziona carte';
+        messageBox.textContent = `1° Cambio: Seleziona carte`;
         updateActionButton('Cambia', changeCards);
+    }
+
+    // --- LOGICA ANIMAZIONE E CAMBIO CARTE ---
+    function animateAndChangeCards() {
+        const cardsToChange = [];
+        cardElements.forEach((card, index) => {
+            if (card.classList.contains('selected')) {
+                cardsToChange.push({ element: card, index: index });
+            }
+        });
+
+        if (cardsToChange.length === 0) {
+            drawCount++;
+            if (drawCount < 3) {
+                messageBox.textContent = `${drawCount + 1}° Cambio: Seleziona carte`;
+            } else {
+                showResult();
+            }
+            return;
+        }
+
+        sounds.spin.play();
+        let animationCounter = 0;
+        const animationInterval = setInterval(() => {
+            animationCounter++;
+            cardsToChange.forEach(cardInfo => {
+                cardInfo.element.textContent = DECK[Math.floor(Math.random() * DECK.length)];
+            });
+            if (animationCounter > 10) { // Durata dell'animazione
+                clearInterval(animationInterval);
+                cardsToChange.forEach(cardInfo => {
+                    currentHand[cardInfo.index] = DECK[Math.floor(Math.random() * DECK.length)];
+                });
+                cardElements.forEach(card => card.classList.remove('selected'));
+                updateDisplay();
+                drawCount++;
+                if (drawCount < 3) {
+                    messageBox.textContent = `${drawCount + 1}° Cambio: Seleziona carte`;
+                } else {
+                    showResult();
+                }
+            }
+        }, 50); // Velocità dell'animazione
     }
 
     function changeCards() {
         if (gamePhase !== 'deal') return;
-        cardElements.forEach((card, index) => {
-            if (card.classList.contains('selected')) {
-                currentHand[index] = DECK[Math.floor(Math.random() * DECK.length)];
-            }
-        });
-        cardElements.forEach(card => card.classList.remove('selected'));
-        updateDisplay();
-        drawCount++;
-        if (drawCount < 2) {
-            messageBox.textContent = '2° Cambio: Seleziona carte';
-        } else {
-            showResult();
-        }
+        animateAndChangeCards();
     }
 
     function showResult() {
         gamePhase = 'result';
         const result = evaluateHand(currentHand);
+        if (result.points > 0) {
+            sounds.win.play();
+        }
         totalScore += result.points;
         updateDisplay();
         messageBox.textContent = `Risultato: ${result.name} (+${result.points} p.)`;
@@ -175,7 +240,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     cardElements.forEach(card => card.addEventListener('click', () => {
-        if (gamePhase === 'deal') card.classList.toggle('selected');
+        if (gamePhase === 'deal') {
+            card.classList.toggle('selected');
+            sounds.click.play();
+        }
     }));
 
     playerNameInput.addEventListener('keydown', (event) => {
@@ -186,12 +254,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function init() {
-        applyStyles(); // Applica gli stili finali all'avvio
-        const lastPlayerName = localStorage.getItem('slotPokerLastName');
-        if (lastPlayerName) {
-            playerNameInput.value = lastPlayerName;
-        }
-        showNameScreen(); // Mostra la schermata del nome e non la classifica
+        applyStyles();
+        initTuningMode();
+        showNameScreen();
     }
 
     init();
