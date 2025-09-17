@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=VT323&display.swap');
 
 /* --- Stili per Pannello Calibrazione --- */
 #tuning-toggle-button {
-    position: fixed;
+    position: absolute; /* Modificato da fixed */
     top: 10px;
-    right: 10px;
+    left: 10px; /* Spostato da right a left */
     z-index: 1001;
     background: #1b263b;
     border: 1px solid #778da9;
@@ -18,7 +18,7 @@
 #tuning-panel {
     position: fixed;
     top: 60px;
-    right: 10px;
+    left: 10px; /* Spostato da right a left */
     background-color: rgba(27, 38, 59, 0.95);
     border: 1px solid #778da9;
     padding: 10px;
@@ -47,6 +47,7 @@ body {
 }
 
 #game-container {
+    position: relative; /* Aggiunto per fare da genitore al pulsante */
     background-color: #1b263b; 
     border: 2px solid #415a77;
     border-radius: 10px;
@@ -55,7 +56,7 @@ body {
     max-width: 450px;
     text-align: center;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    transition: transform 0.3s; /* Transizione per lo zoom */
+    transition: transform 0.3s;
 }
 
 #casio-body {
