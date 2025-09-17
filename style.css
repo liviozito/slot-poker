@@ -1,3 +1,4 @@
+/* Slot-Poker v10.0 - Aggiornato: 17 settembre 2025 */
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
 /* Stili Controlli UI */
@@ -7,18 +8,89 @@
 #tuning-toggle-button { text-align: left; }
 #sound-toggle-button { text-align: right; }
 
-#tuning-panel { position: fixed; top: 60px; left: 10px; background-color: rgba(27, 38, 59, 0.95); border: 1px solid #778da9; padding: 10px; border-radius: 5px; z-index: 1000; font-family: sans-serif; font-size: 12px; color: white; display: none; }
-#tuning-panel div { margin-bottom: 5px; text-align: left;}
-#tuning-panel label { display: inline-block; width: 80px; }
-#tuning-panel input { width: 100px; }
-#tuning-panel span { margin-left: 5px; font-weight: bold; color: #ffca3a; }
+#tuning-panel {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 110px; /* ridotto al 50% */
+    background-color: rgba(27, 38, 59, 0.98);
+    border: 2px solid #ffca3a;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    padding: 6px 6px 4px 6px; /* ridotto al 50% */
+    border-radius: 10px;
+    z-index: 2000;
+    font-family: sans-serif;
+    font-size: 6px; /* ridotto al 50% */
+    color: white;
+    display: none;
+    cursor: default;
+    transition: box-shadow 0.2s;
+}
+
+#tuning-panel.active {
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+}
+
+#tuning-panel .panel-header {
+    font-weight: bold;
+    cursor: move;
+    margin-bottom: 4px;
+    user-select: none;
+}
+
+#tuning-panel div { margin-bottom: 3px; text-align: left;}
+#tuning-panel label { display: inline-block; width: 35px; }
+#tuning-panel input[type="range"] { width: 35px; }
+#tuning-panel span { margin-left: 3px; font-weight: bold; color: #ffca3a; }
+#tuning-panel .step-btn {
+    background: #ffca3a;
+    color: #222;
+    border: none;
+    border-radius: 3px;
+    font-size: 0.5em;
+    width: 9px;
+    height: 9px;
+    cursor: pointer;
+    margin: 0 1px;
+    vertical-align: middle;
+    padding: 0;
+}
+
+#tuning-panel .close-btn {
+    position: absolute;
+    top: 3px;
+    right: 5px;
+    background: transparent;
+    border: none;
+    color: #ffca3a;
+    font-size: 0.6em;
+    cursor: pointer;
+    padding: 0;
+}
 
 /* Stili Terminale Fantasma */
 #terminal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #000; color: #33ff33; font-family: 'VT323', monospace; z-index: 2000; padding: 20px; box-sizing: border-box; overflow-y: auto; opacity: 0; transition: opacity 0.5s ease-in-out; display: none; }
 #code-display { white-space: pre-wrap; margin: 0; font-size: 1.2em; }
 .blinking-cursor { display: inline-block; background-color: #33ff33; width: 0.7em; height: 1.2em; margin-left: 2px; animation: blink 1s step-end infinite; }
 @keyframes blink { from, to { opacity: 1; } 50% { opacity: 0; } }
-#close-terminal-button { position: fixed; bottom: 20px; right: 20px; z-index: 2001; }
+
+/* Migliori 3 punteggi sempre visibili */
+.top-leaderboard {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 20px 0;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    font-size: 1.2em;
+    color: #ffca3a;
+    text-shadow: 0 0 5px black;
+}
+.top-leaderboard .top-score {
+    font-weight: bold;
+    color: #ffd700;
+}
 
 /* Stili di Base */
 body { font-family: 'VT323', monospace; color: #e0e1dd; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #000; }
@@ -43,7 +115,6 @@ button:hover { background-color: #415a77; }
 #leaderboard-list li { font-size: 0.8em; padding: 1px 0; border-bottom: 1px dotted #415a77; }
 #leaderboard-list li:last-child { border-bottom: none; }
 #leaderboard-list li.top-score { color: #ffca3a; font-weight: bold; font-size: 0.9em; }
-
 /* STILI INPUT E TASTIERA VIRTUALE */
 #name-input-section label { font-size: 1.1em; color: #778da9; margin-bottom: 10px; }
 #player-name { background-color: #0d1b2a; border: 1px solid #778da9; color: #e0e1dd; text-align: center; font-family: 'VT323', monospace; font-size: 1.5em; width: 90%; padding: 4px; border-radius: 3px; }
