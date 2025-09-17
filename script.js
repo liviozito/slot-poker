@@ -1,7 +1,7 @@
-// --- Slot-Poker v10.2 ---
-// Aggiornato: 17 settembre 2025
+// --- Slot-Poker v10.3 ---
+// Aggiornato: 18 settembre 2025
 // Migliori 3 punteggi sempre visibili, leaderboard su Firebase, audio attivo di default
-// Tastiera virtuale rimossa
+// Rimosso audio dal pulsante </> per evitare errori di caricamento file
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -188,9 +188,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initTerminalMode() {
-        function typeOutCode(code, element, speed = 15) { let i = 0; element.innerHTML = ''; const cursor = document.createElement('span'); cursor.className = 'blinking-cursor'; element.appendChild(cursor); function type() { if (i < code.length) { element.insertBefore(document.createTextNode(code[i]), cursor); i++; typingInterval = setTimeout(type, speed); } } type(); }
-        sourceToggleButton.addEventListener('click', () => { gameContainer.style.opacity = '0'; terminalOverlay.style.display = 'block'; setTimeout(() => terminalOverlay.style.opacity = '1', 10); typeOutCode(original_basic_code, codeDisplay); });
-        closeTerminalButton.addEventListener('click', () => { clearTimeout(typingInterval); terminalOverlay.style.opacity = '0'; setTimeout(() => { terminalOverlay.style.display = 'none'; gameContainer.style.opacity = '1'; }, 500); });
+        function typeOutCode(code, element, speed = 15) { 
+            let i = 0; 
+            element.innerHTML = ''; 
+            const cursor = document.createElement('span'); 
+            cursor.className = 'blinking-cursor'; 
+            element.appendChild(cursor); 
+            function type() { 
+                if (i < code.length) { 
+                    element.insertBefore(document.createTextNode(code[i]), cursor); 
+                    i++; 
+                    typingInterval = setTimeout(type, speed); 
+                } 
+            } 
+            type(); 
+        }
+        
+        sourceToggleButton.addEventListener('click', () => {
+            gameContainer.style.opacity = '0';
+            terminalOverlay.style.display = 'block';
+            setTimeout(() => terminalOverlay.style.opacity = '1', 10);
+            typeOutCode(original_basic_code, codeDisplay);
+            
+            // Rimosso completamente l'audio dal pulsante </>
+            console.log("Visualizzazione codice sorgente attivata");
+        });
+
+        closeTerminalButton.addEventListener('click', () => { 
+            clearTimeout(typingInterval); 
+            terminalOverlay.style.opacity = '0'; 
+            setTimeout(() => { 
+                terminalOverlay.style.display = 'none'; 
+                gameContainer.style.opacity = '1'; 
+            }, 500); 
+        });
     }
 
     async function updateTopLeaderboard() {
