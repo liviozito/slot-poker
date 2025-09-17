@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const DECK = ['7', '8', '9', 'D', 'J', 'Q', 'K', 'A'];
     const CARD_VALUES = { '7': 7, '8': 8, '9': 9, 'D': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14 };
     const MAX_LEADERBOARD_ENTRIES = 3;
+    const screenConfig = { top: 5, left: 3, width: 67, height: 60, zoom: 100 };
 
     // Elementi DOM
     const gameContainer = document.getElementById('game-container');
@@ -69,19 +70,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const codeDisplay = document.getElementById('code-display');
     const closeTerminalButton = document.getElementById('close-terminal-button');
     const tuningToggle = document.getElementById('tuning-toggle-button');
-    const panel = document.getElementById('tuning-panel');
+    const tuningPanel = document.getElementById('tuning-panel'); // CORREZIONE QUI
     
     // Variabili di stato
     let currentHand = [], handNumber = 1, totalScore = 0, playerName = '', gamePhase = 'deal', drawCount = 0;
     let audioCtx, isMuted = true, typingInterval = null, currentAction = null;
 
     // --- MOTORE AUDIO SINTETIZZATO ---
-    const sounds = {
-        click: { type: 'triangle', freq: 880, dur: 0.1 },
-        win: { type: 'sine', freq: 523.25, dur: 0.2 },
-        spin: { type: 'square', freq: 1500, dur: 0.05 }
-    };
-
     function initAudio() { if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { console.error("Web Audio API non supportata."); } } }
     
     function playSound(type) {
@@ -90,30 +85,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const gainNode = audioCtx.createGain();
         gainNode.connect(audioCtx.destination);
         gainNode.gain.setValueAtTime(0.15, now);
+        const osc = audioCtx.createOscillator();
+        osc.connect(gainNode);
 
-        if (type === 'spin') {
-            let tickTime = 0;
-            for (let i = 0; i < 5; i++) {
-                const o = audioCtx.createOscillator();
-                o.connect(gainNode);
-                o.type = sounds.spin.type;
-                o.frequency.setValueAtTime(sounds.spin.freq, now + tickTime);
-                gainNode.gain.setValueAtTime(0.15, now + tickTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.0001, now + tickTime + sounds.spin.dur);
-                o.start(now + tickTime);
-                o.stop(now + tickTime + sounds.spin.dur);
-                tickTime += 0.04;
-            }
-        } else {
-            const o = audioCtx.createOscillator();
-            o.connect(gainNode);
-            o.type = sounds[type].type;
-            o.frequency.setValueAtTime(sounds[type].freq, now);
-            if (type === 'win') o.frequency.setValueAtTime(sounds[type].freq * 1.25, now + 0.1);
-            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + sounds[type].dur);
-            o.start(now);
-            o.stop(now + sounds[type].dur);
-        }
+        if (type === 'click') { osc.type = 'triangle'; osc.frequency.setValueAtTime(880, now); gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.1); osc.start(now); osc.stop(now + 0.1); }
+        else if (type === 'win') { osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, now); osc.frequency.setValueAtTime(659.25, now + 0.1); gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.2); osc.start(now); osc.stop(now + 0.2); }
+        else if (type === 'spin') { let t = 0; for (let i = 0; i < 5; i++) { const o = audioCtx.createOscillator(); o.connect(gainNode); o.type = 'square'; o.frequency.setValueAtTime(1500, now + t); gainNode.gain.setValueAtTime(0.15, now + t); gainNode.gain.exponentialRampToValueAtTime(0.0001, now + t + 0.05); o.start(now + t); o.stop(now + t + 0.05); t += 0.04; } }
     }
     
     // --- FUNZIONI DI GIOCO ---
@@ -122,7 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
         hand.forEach(card => { counts[card] = (counts[card] || 0) + 1; });
         const groups = Object.entries(counts).map(([card, count]) => ({ card, cardValue: CARD_VALUES[card], count }))
             .sort((a, b) => (b.count - a.count) || (b.cardValue - a.cardValue));
-        
         const mainGroup = groups[0];
         if (mainGroup.count === 4) return { name: "Poker", points: 400 + mainGroup.cardValue * 4 };
         if (mainGroup.count === 3 && groups[1]?.count === 2) return { name: "Full", points: 320 + mainGroup.cardValue * 3 + groups[1].cardValue * 2 };
@@ -166,11 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json', 'X-API-KEY': API_KEY },
                 body: JSON.stringify({ leaderboard: leaderboard.slice(0, 10) })
             });
-            if (!response.ok) {
-                console.error("Errore API PUT:", response.status, await response.text());
-            } else {
-                console.log("Punteggio salvato con successo!");
-            }
+            if (!response.ok) { console.error("Errore API PUT:", response.status, await response.text()); }
+            else { console.log("Punteggio salvato con successo!"); }
         } catch (e) { console.error("Errore di rete nel salvare la classifica:", e); }
     }
     
@@ -194,112 +167,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showNameScreen() {
         playerNameInput.value = localStorage.getItem('slotPokerLastName') || '';
-        showSection('name-input-section');
-        updateActionButton('Inizia a Giocare', startGame);
-    }
-    
-    function updateActionButton(text, action) {
-        actionButton.textContent = text;
-        if (currentAction) actionButton.removeEventListener('click', currentAction);
-        currentAction = action;
-        actionButton.addEventListener('click', currentAction);
-        actionButton.style.display = 'inline-block';
-    }
-
-    function startGame() {
-        if (!audioCtx && !isMuted) initAudio();
-        playerName = playerNameInput.value.trim();
-        if (playerName === '') { alert('Per favore, inserisci il tuo nome!'); return; }
-        localStorage.setItem('slotPokerLastName', playerName);
-        handNumber = 1; totalScore = 0;
-        showSection('game-section');
-        dealHand();
-    }
-
-    function dealHand() {
-        gamePhase = 'deal'; drawCount = 0;
-        currentHand = Array(5).fill(null).map(() => DECK[Math.floor(Math.random() * DECK.length)]);
-        cardElements.forEach(card => card.classList.remove('selected'));
-        updateDisplay();
-        messageBox.textContent = `1° Cambio: Seleziona carte`;
-        updateActionButton('Cambia', changeCards);
-    }
-
-    function animateAndChangeCards() {
-        const cardsToChange = cardElements.map((card, index) => ({ card, index }))
-            .filter(c => c.card.classList.contains('selected'));
-        
-        if (cardsToChange.length === 0) {
-            drawCount++;
-            if (drawCount < 3) {
-                messageBox.textContent = `${drawCount + 1}° Cambio: Seleziona carte`;
-            } else { showResult(); }
-            return;
-        }
-
-        playSound('spin');
-        actionButton.disabled = true;
-        let animationCounter = 0;
-        const animationInterval = setInterval(() => {
-            animationCounter++;
-            cardsToChange.forEach(c => { c.card.textContent = DECK[Math.floor(Math.random() * DECK.length)]; });
-            if (animationCounter > 10) {
-                clearInterval(animationInterval);
-                cardsToChange.forEach(c => { currentHand[c.index] = DECK[Math.floor(Math.random() * DECK.length)]; });
-                cardElements.forEach(card => card.classList.remove('selected'));
-                updateDisplay();
-                drawCount++;
-                if (drawCount < 3) {
-                    messageBox.textContent = `${drawCount + 1}° Cambio: Seleziona carte`;
-                } else { showResult(); }
-                actionButton.disabled = false;
-            }
-        }, 50);
-    }
-
-    function changeCards() { if (gamePhase === 'deal') animateAndChangeCards(); }
-
-    function showResult() {
-        gamePhase = 'result';
-        const result = evaluateHand(currentHand);
-        if (result.points > 100) playSound('win');
-        totalScore += result.points;
-        updateDisplay();
-        messageBox.textContent = `Risultato: ${result.name} (+${result.points} p.)`;
-        if (handNumber < 5) {
-            updateActionButton('Prossima Mano', () => { handNumber++; dealHand(); });
-        } else {
-            actionButton.style.display = 'none';
-            messageBox.textContent += ` | Partita Finita!`;
-            saveScore(playerName, totalScore).then(() => setTimeout(displayLeaderboard, 2000));
-        }
-    }
-
-    // --- EVENT LISTENERS E INIZIALIZZAZIONE ---
-    cardElements.forEach(card => card.addEventListener('click', () => {
-        if (gamePhase === 'deal') {
-            card.classList.toggle('selected');
-            playSound('click');
-        }
-    }));
-
-    playerNameInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); actionButton.click(); } });
-
-    // Inizializzazione pannello calibrazione
-    const screenConfig = { top: 5, left: 3, width: 67, height: 60, zoom: 100 };
-    function initTuningMode() { /* ... codice per tuning ... */ } // Il codice completo è troppo lungo, lo abbrevio qui
-    const closePanelOnClickOutside = (event) => { if (!panel.contains(event.target) && event.target !== tuningToggle) { panel.style.display = 'none'; window.removeEventListener('click', closePanelOnClickOutside); } };
-    tuningToggle.addEventListener('click', () => { const isVisible = panel.style.display === 'block'; panel.style.display = isVisible ? 'none' : 'block'; if (!isVisible) { setTimeout(() => window.addEventListener('click', closePanelOnClickOutside), 0); } else { window.removeEventListener('click', closePanelOnClickOutside); } });
-    panel.innerHTML = `<div>...</div>`; // Contenuto del pannello
-    
-    // Inizializzazione terminale fantasma
-    function typeOutCode(code, element, speed = 10) { /* ... codice per scrivere ... */ }
-    sourceToggleButton.addEventListener('click', () => { /* ... codice per aprire terminale ... */ });
-    closeTerminalButton.addEventListener('click', () => { /* ... codice per chiudere terminale ... */ });
-
-    function init() {
-        // Funzioni complete nel codice finale
-    }
-
-    init();
-});
+        showSection('name-
