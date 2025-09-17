@@ -167,4 +167,96 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showNameScreen() {
         playerNameInput.value = localStorage.getItem('slotPokerLastName') || '';
-        showSection('name-
+        showSection('name-input-section');
+        updateActionButton('Inizia a Giocare', startGame);
+    }
+    
+    function updateActionButton(text, action) {
+        actionButton.textContent = text;
+        if (currentAction) actionButton.removeEventListener('click', currentAction);
+        currentAction = action;
+        actionButton.addEventListener('click', currentAction);
+        actionButton.style.display = 'inline-block';
+    }
+
+    function startGame() {
+        if (!audioCtx && !isMuted) initAudio();
+        playerName = playerNameInput.value.trim();
+        if (playerName === '') { alert('Per favore, inserisci il tuo nome!'); return; }
+        localStorage.setItem('slotPokerLastName', playerName);
+        handNumber = 1; totalScore = 0;
+        showSection('game-section');
+        dealHand();
+    }
+
+    function dealHand() {
+        gamePhase = 'deal'; drawCount = 0;
+        currentHand = Array(5).fill(null).map(() => DECK[Math.floor(Math.random() * DECK.length)]);
+        cardElements.forEach(card => card.classList.remove('selected'));
+        updateDisplay();
+        messageBox.textContent = `1° Cambio: Seleziona carte`;
+        updateActionButton('Cambia', changeCards);
+    }
+
+    function animateAndChangeCards() {
+        const cardsToChange = cardElements.map((card, index) => ({ card, index })).filter(c => c.card.classList.contains('selected'));
+        if (cardsToChange.length === 0) { drawCount++; if (drawCount < 3) { messageBox.textContent = `${drawCount + 1}° Cambio: Seleziona carte`; } else { showResult(); } return; }
+        playSound('spin');
+        actionButton.disabled = true;
+        let animationCounter = 0;
+        const animationInterval = setInterval(() => {
+            animationCounter++;
+            cardsToChange.forEach(c => { c.card.textContent = DECK[Math.floor(Math.random() * DECK.length)]; });
+            if (animationCounter > 10) { clearInterval(animationInterval); cardsToChange.forEach(c => { currentHand[c.index] = DECK[Math.floor(Math.random() * DECK.length)]; }); cardElements.forEach(card => card.classList.remove('selected')); updateDisplay(); drawCount++; if (drawCount < 3) { messageBox.textContent = `${drawCount + 1}° Cambio: Seleziona carte`; } else { showResult(); } actionButton.disabled = false; }
+        }, 50);
+    }
+
+    function changeCards() { if (gamePhase === 'deal') animateAndChangeCards(); }
+
+    function showResult() {
+        gamePhase = 'result';
+        const result = evaluateHand(currentHand);
+        if (result.points > 100) playSound('win');
+        totalScore += result.points;
+        updateDisplay();
+        messageBox.textContent = `Risultato: ${result.name} (+${result.points} p.)`;
+        if (handNumber < 5) {
+            updateActionButton('Prossima Mano', () => { handNumber++; dealHand(); });
+        } else {
+            actionButton.style.display = 'none';
+            messageBox.textContent += ` | Partita Finita!`;
+            saveScore(playerName, totalScore).then(() => setTimeout(displayLeaderboard, 2000));
+        }
+    }
+    
+    // --- FUNZIONI DI INIZIALIZZAZIONE E LISTENER ---
+    function initTuningMode() {
+        const closePanelOnClickOutside = (event) => { if (!tuningPanel.contains(event.target) && event.target !== tuningToggle) { tuningPanel.style.display = 'none'; window.removeEventListener('click', closePanelOnClickOutside); } };
+        tuningToggle.addEventListener('click', () => { const isVisible = tuningPanel.style.display === 'block'; tuningPanel.style.display = isVisible ? 'none' : 'block'; if (!isVisible) { setTimeout(() => window.addEventListener('click', closePanelOnClickOutside), 0); } else { window.removeEventListener('click', closePanelOnClickOutside); } });
+        tuningPanel.innerHTML = `<div><strong>Pannello Calibrazione</strong></div>` + ['top', 'left', 'width', 'height', 'zoom'].map(p => `<div><label>${p}:</label> <input type="range" id="${p}" min="0" max="150" value="${screenConfig[p]}"> <span id="${p}-val">${screenConfig[p]}%</span></div>`).join('');
+        ['top', 'left', 'width', 'height', 'zoom'].forEach(prop => {
+            const slider = document.getElementById(prop);
+            const valueSpan = document.getElementById(`${prop}-val`);
+            slider.addEventListener('input', () => { screenConfig[prop] = slider.value; valueSpan.textContent = `${slider.value}%`; applyStyles(); });
+        });
+    }
+
+    function initTerminalMode() {
+        function typeOutCode(code, element, speed = 10) { let i = 0; element.innerHTML = ''; const cursor = document.createElement('span'); cursor.className = 'blinking-cursor'; element.appendChild(cursor); function type() { if (i < code.length) { element.insertBefore(document.createTextNode(code[i]), cursor); i++; typingInterval = setTimeout(type, speed); } } type(); }
+        sourceToggleButton.addEventListener('click', () => { gameContainer.style.opacity = '0'; terminalOverlay.style.display = 'block'; setTimeout(() => terminalOverlay.style.opacity = '1', 10); typeOutCode(original_basic_code, codeDisplay); });
+        closeTerminalButton.addEventListener('click', () => { clearTimeout(typingInterval); terminalOverlay.style.opacity = '0'; setTimeout(() => { terminalOverlay.style.display = 'none'; gameContainer.style.opacity = '1'; }, 500); });
+    }
+
+    // Funzione di avvio principale
+    function init() {
+        applyStyles();
+        initTuningMode();
+        initTerminalMode();
+        showNameScreen();
+        soundToggleButton.addEventListener('click', () => { isMuted = !isMuted; soundToggleButton.textContent = isMuted ? '🔇' : '🔊'; if (!isMuted && !audioCtx) { initAudio(); } if (!isMuted) playSound('click'); });
+        cardElements.forEach(card => card.addEventListener('click', () => { if (gamePhase === 'deal') { card.classList.toggle('selected'); playSound('click'); } }));
+        playerNameInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); actionButton.click(); } });
+    }
+
+    init(); // Avvia tutto
+});
