@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- CONFIGURAZIONE DATABASE PUNTEGGI ---
-    const SILO_ID = 'slot-poker';
+    // --- CONFIGURAZIONE DATABASE PUNTEGGI (v3.4 - CORRETTO) ---
+    const SILO_ID = 'fef8244a-32a1-49b4-8554-115925117c9f';
     const API_KEY = 'dqbKXp5bWCc8D6hHAq23GhuBer2Gd2qFs813iBQYXT';
-    const SILO_URL = `https://www.jsonsilo.com/silo/${SILO_ID}`;
+    const SILO_URL = `https://api.jsonsilo.com/${SILO_ID}`; // URL API CORRETTO
 
     // --- MOTORE AUDIO SINTETIZZATO ---
     const soundToggleButton = document.getElementById('sound-toggle-button');
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isMuted = !isMuted;
         soundToggleButton.textContent = isMuted ? '🔇' : '🔊';
         if (!isMuted && !audioCtx) {
-            initAudio();
+            initAudio(); 
         }
         if(!isMuted) playSound('click');
     });
@@ -54,7 +54,6 @@ document.addEventListener('DOMContentLoaded', () => {
             oscillator.start(now);
             oscillator.stop(now + 0.2);
         } else if (type === 'spin') {
-            // --- NUOVO SUONO SLOT MACHINE (v3.3) ---
             let tickTime = 0;
             for (let i = 0; i < 5; i++) {
                 const osc = audioCtx.createOscillator();
@@ -129,7 +128,11 @@ document.addEventListener('DOMContentLoaded', () => {
     async function getLeaderboard() {
         try {
             const response = await fetch(SILO_URL);
-            if (!response.ok) return [];
+            if (response.status === 404) return []; // Se il silo è vuoto la prima volta, restituisce 404
+            if (!response.ok) {
+                console.error("Errore API:", response.statusText);
+                return [];
+            }
             const data = await response.json();
             return data.leaderboard || [];
         } catch (e) {
@@ -145,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
         leaderboard.push({ name, score, date: dateString });
         leaderboard.sort((a, b) => b.score - a.score);
         try {
-            await fetch(SILO_URL, {
+            const response = await fetch(SILO_URL, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -153,6 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({ leaderboard: leaderboard.slice(0, 10) })
             });
+            if(!response.ok) {
+                console.error("Errore nel salvataggio:", await response.text());
+            }
         } catch (e) {
             console.error("Errore nel salvare la classifica:", e);
         }
