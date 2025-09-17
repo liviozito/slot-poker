@@ -1,10 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
-/* --- Stili per Controlli UI (v3.5) --- */
-#tuning-toggle-button {
+/* --- Stili per Controlli UI --- */
+#tuning-toggle-button, #sound-toggle-button, #source-toggle-button {
     position: absolute;
-    top: 5px;
-    left: 5px;
     z-index: 1001;
     background: transparent;
     border: none;
@@ -14,34 +12,9 @@
     padding: 5px;
     text-shadow: 0 0 5px black;
 }
-#sound-toggle-button {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    z-index: 1001;
-    background: transparent;
-    border: none;
-    color: white;
-    font-size: 1.8em;
-    cursor: pointer;
-    padding: 5px;
-    text-shadow: 0 0 5px black;
-}
-/* NUOVO STILE PULSANTE SORGENTE */
-#source-toggle-button {
-    position: absolute;
-    top: 45px;
-    left: 5px;
-    z-index: 1001;
-    background: transparent;
-    border: none;
-    color: white;
-    font-size: 1.5em;
-    font-family: monospace;
-    cursor: pointer;
-    padding: 5px;
-    text-shadow: 0 0 5px black;
-}
+#tuning-toggle-button { top: 5px; left: 5px; }
+#sound-toggle-button { top: 5px; right: 5px; }
+#source-toggle-button { top: 45px; left: 5px; font-family: monospace; font-size: 1.5em; }
 
 #tuning-panel {
     position: fixed;
@@ -62,15 +35,13 @@
 #tuning-panel input { width: 100px; }
 #tuning-panel span { margin-left: 5px; font-weight: bold; color: #ffca3a; }
 
-/* --- Stili per Terminale Fantasma (v3.5) --- */
+/* --- Stili per Terminale Fantasma --- */
 #terminal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     background-color: #000;
-    color: #33ff33; /* Colore fosfori verdi */
+    color: #33ff33;
     font-family: 'VT323', monospace;
     z-index: 2000;
     padding: 20px;
@@ -78,6 +49,7 @@
     overflow-y: auto;
     opacity: 0;
     transition: opacity 0.5s ease-in-out;
+    display: none;
 }
 #code-display {
     white-space: pre-wrap;
@@ -138,10 +110,6 @@ body {
 }
 #screen-overlay {
     position: absolute;
-    top: 5%;
-    left: 3%;
-    width: 67%;
-    height: 60%;
     background-color: rgba(14, 45, 5, 0.75);
     border-radius: 3px;
     padding: 5px;
