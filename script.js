@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let totalScore = 0;
     let playerName = '';
     let gamePhase = 'deal';
+    let drawCount = 0; // Contatore per i cambi carte
     const MAX_LEADERBOARD_ENTRIES = 3;
 
     // --- Logica di valutazione (invariata) ---
@@ -78,7 +79,12 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         showSection('leaderboard-section');
-        updateActionButton('Gioca Ancora', () => showSection('name-input-section'));
+        updateActionButton('Gioca Ancora', showNameScreen);
+    }
+
+    function showNameScreen() {
+        showSection('name-input-section');
+        updateActionButton('Inizia a Giocare', startGame);
     }
 
     // --- Funzione di Controllo del Pulsante Unico ---
@@ -109,21 +115,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function dealHand() {
         gamePhase = 'deal';
+        drawCount = 0; // Resetta il contatore dei cambi
         currentHand = Array(5).fill(null).map(() => DECK[Math.floor(Math.random() * DECK.length)]);
         cardElements.forEach(card => card.classList.remove('selected'));
         updateDisplay();
-        messageBox.textContent = 'Seleziona le carte da cambiare';
+        messageBox.textContent = '1° Cambio: Seleziona carte';
         updateActionButton('Cambia', changeCards);
     }
 
     function changeCards() {
         if (gamePhase !== 'deal') return;
+        
+        let changed = false;
         cardElements.forEach((card, index) => {
             if (card.classList.contains('selected')) {
                 currentHand[index] = DECK[Math.floor(Math.random() * DECK.length)];
+                changed = true;
             }
         });
-        showResult();
+        
+        cardElements.forEach(card => card.classList.remove('selected'));
+        updateDisplay();
+        drawCount++;
+
+        if (drawCount < 2) {
+            messageBox.textContent = '2° Cambio: Seleziona carte';
+            // L'azione del pulsante rimane "Cambia"
+        } else {
+            showResult();
+        }
     }
 
     function showResult() {
@@ -139,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 dealHand();
             });
         } else {
-            actionButton.style.display = 'none'; // Nasconde il pulsante durante l'attesa
+            actionButton.style.display = 'none';
             messageBox.textContent += ` | Partita Finita!`;
             saveScore(playerName, totalScore);
             setTimeout(displayLeaderboard, 2000);
@@ -154,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
     playerNameInput.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
             event.preventDefault();
-            startGame();
+            actionButton.click(); // Simula il click del pulsante di azione corrente
         }
     });
 
@@ -165,10 +185,6 @@ document.addEventListener('DOMContentLoaded', () => {
             playerNameInput.value = lastPlayerName;
         }
         displayLeaderboard();
-        updateActionButton('Inizia a Giocare', startGame);
-        // La prima visualizzazione è la classifica, quindi mostriamo il pulsante "Gioca Ancora"
-        // Ma siccome all'inizio non c'è una partita, "Gioca Ancora" porta alla schermata del nome
-        updateActionButton('Inizia a Giocare', () => showSection('name-input-section'));
     }
 
     init();
