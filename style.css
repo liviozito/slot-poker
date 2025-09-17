@@ -34,18 +34,20 @@ body {
     display: block;
 }
 
+/* --- MODIFICHE DI POSIZIONAMENTO E DIMENSIONE (v1.8) --- */
 #screen-overlay {
     position: absolute;
-    top: 28%;
-    left: 13%;
-    width: 74%;
-    height: 45%;
+    /* Ho applicato le tue coordinate percentuali */
+    top: 10%;    /* Spostato in alto del 40% (da 28% a 10%) */
+    left: 6%;    /* Spostato a sinistra del 10% (da 13% a 6%) */
+    width: 52%;  /* Ridotto del 30% circa (da 74% a 52%) */
+    height: 32%; /* Ridotto del 30% circa (da 45% a 32%) */
     
     background-color: rgba(14, 45, 5, 0.75);
     border-radius: 3px;
-    padding: 5px;
+    padding: 3px 5px; /* Padding ridotto */
     
-    display: flex; /* Manteniamo flex per centrare la sezione attiva */
+    display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -69,103 +71,101 @@ h1 {
     font-size: 0.8em;
 }
 
+/* --- RIDIMENSIONAMENTO DEGLI ELEMENTI INTERNI --- */
+
 #info-bar {
     display: flex;
     justify-content: space-between;
-    font-size: 1em;
-    margin-bottom: 5px;
-    padding: 2px 5px;
+    font-size: 0.8em; /* Ridotto */
+    margin-bottom: 3px; /* Ridotto */
+    padding: 2px 4px;
     background-color: rgba(0,0,0,0.2);
-    border-radius: 3px;
-    width: 100%; /* Occupa tutta la larghezza del genitore */
+    border-radius: 2px;
+    width: 100%;
 }
 
 #hand-display {
     display: flex;
     justify-content: space-around;
-    margin: 5px 0;
+    margin: 2px 0; /* Ridotto */
     width: 100%;
 }
 
 .card {
     width: 18%;
-    height: 45px;
+    height: 30px; /* Ridotto */
     border: 1px solid #778da9;
     background-color: #e0e1dd;
     color: #0d1b2a;
-    font-size: 1.8em;
+    font-size: 1.3em; /* Ridotto */
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 3px;
+    border-radius: 2px;
     cursor: pointer;
     transition: all 0.2s;
 }
 
 .card.selected {
     border-color: #ffca3a;
-    transform: translateY(-5px);
+    transform: translateY(-3px); /* Ridotto */
 }
 
 #message-box {
-    min-height: 20px;
-    font-size: 1em;
+    min-height: 15px; /* Ridotto */
+    font-size: 0.8em; /* Ridotto */
     color: #ffca3a;
-    margin: 5px 0;
+    margin: 3px 0; /* Ridotto */
 }
 
 button {
-    font-size: 1.1em;
-    padding: 5px 10px;
+    font-size: 0.9em; /* Ridotto */
+    padding: 2px 8px; /* Ridotto */
     background-color: #778da9;
     color: #e0e1dd;
     border: none;
     border-radius: 3px;
     cursor: pointer;
-    margin-top: 5px;
+    margin-top: 3px; /* Ridotto */
 }
 
 button:hover {
     background-color: #415a77;
 }
 
-/* --- MODIFICA CHIAVE PER LA CORREZIONE --- */
 .game-section {
     width: 100%;
-    height: 100%; /* Forza la sezione attiva a riempire lo schermo */
-    margin: 0;
-    /* La sezione attiva diventa a sua volta un contenitore flex */
+    height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: space-around;
+    justify-content: center;
     align-items: center;
 }
 
 #player-name {
-    padding: 4px;
-    width: 80%;
-    margin-bottom: 5px;
-    font-size: 1em;
+    padding: 2px;
+    width: 70%;
+    margin-bottom: 4px;
+    font-size: 0.9em;
 }
 
 #leaderboard-section h2 {
-    font-size: 1.2em;
-    margin: 0 0 5px 0;
+    font-size: 1em;
+    margin: 0;
     color: #778da9;
 }
 
 #leaderboard-list {
     list-style: none;
-    padding: 0 5px;
-    margin: 0;
+    padding: 0;
+    margin: 2px 0;
     width: 100%;
     background-color: transparent;
-    border-radius: 3px;
 }
 
 #leaderboard-list li {
-    font-size: 0.9em;
-    padding: 2px 0;
+    font-size: 0.75em;
+    padding: 1px 0;
     border-bottom: 1px dotted #415a77;
     white-space: nowrap;
     overflow: hidden;
@@ -179,5 +179,5 @@ button:hover {
 #leaderboard-list li.top-score {
     color: #ffca3a;
     font-weight: bold;
-    font-size: 1em;
+    font-size: 0.85em;
 }
