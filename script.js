@@ -1,10 +1,11 @@
-// --- Slot-Poker v10.3 ---
+// --- Slot-Poker v10.4 ---
 // Aggiornato: 18 settembre 2025
 // Migliori 3 punteggi sempre visibili, leaderboard su Firebase, audio base legato al pulsante altoparlante
 // Audio di default disattivato, audiobase.mp3 in loop fino a chiusura pagina, interrotto da audio.mp3 con </>
+// Maschera </>: caratteri ridotti del 50%, rimosso pulsante di uscita, uscita con click ovunque
 // git status
 // git add .
-// git commit -m "Update con audiobase.mp3 legato al pulsante altoparlante"
+// git commit -m "Aggiornata maschera </> con caratteri al 50%, senza pulsante di uscita, click ovunque per uscire"
 // git push --force-with-lease
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -80,8 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const leaderboardList = document.getElementById('leaderboard-list');
     const terminalOverlay = document.getElementById('terminal-overlay');
     const codeDisplay = document.getElementById('code-display');
-    const closeTerminalButton = document.getElementById('close-terminal-button');
-    const topLeaderboard = document.getElementById('top-leaderboard');
 
     // --- VARIABILI DI STATO ---
     let playerName = '', audioCtx, isMuted = true; // Audio disattivato di default
@@ -380,6 +379,9 @@ document.addEventListener('DOMContentLoaded', () => {
             console.warn("Verifica che il file audiobase.mp3 sia presente nel repository GitHub");
         });
 
+        // Riduci la dimensione del font del 50% per codeDisplay
+        codeDisplay.style.fontSize = '50%';
+
         sourceToggleButton.addEventListener('click', () => {
             // Ferma audiobase.mp3 se in riproduzione
             if (baseAudio && !baseAudio.paused) {
@@ -401,7 +403,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        closeTerminalButton.addEventListener('click', () => { 
+        // Chiudi la maschera cliccando ovunque
+        terminalOverlay.addEventListener('click', () => { 
             clearTimeout(typingInterval); 
             
             // Ferma audio.mp3 se in riproduzione
