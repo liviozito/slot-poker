@@ -1,19 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
-/* --- Stili per Pannello Calibrazione (v2.8) --- */
+/* --- Stili per Pannello Calibrazione (v2.9) --- */
 #tuning-toggle-button {
     position: absolute;
     top: 5px;
     left: 5px;
     z-index: 1001;
-    /* Rimosso lo sfondo e il bordo */
     background: transparent;
     border: none;
     color: white;
     font-size: 1.8em;
     cursor: pointer;
     padding: 5px;
-    text-shadow: 0 0 5px black; /* Ombra per leggibilità */
+    text-shadow: 0 0 5px black;
 }
 #tuning-panel {
     position: fixed;
@@ -33,6 +32,12 @@
 #tuning-panel label { display: inline-block; width: 60px; }
 #tuning-panel input { width: 100px; }
 #tuning-panel span { margin-left: 5px; font-weight: bold; color: #ffca3a; }
+#debug-sound-button { /* Stile per il pulsante di debug */
+    width: 100%;
+    margin-top: 10px;
+    padding: 5px;
+    font-size: 12px;
+}
 
 /* --- Stili di Base --- */
 body {
