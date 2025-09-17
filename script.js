@@ -208,9 +208,19 @@ function initTerminalMode() {
         type(); 
     }
     
-    // Crea l'audio che funziona
-    const matrixAudio = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
+    // Crea l'elemento audio per il file MP3 su GitHub Pages
+    const matrixAudio = new Audio("https://liviozito.github.io/slot-poker/audio.mp3");
     matrixAudio.volume = 0.5;
+    
+    // Event listener per debug (opzionale, puoi rimuoverlo)
+    matrixAudio.addEventListener('canplaythrough', () => {
+        console.log("Audio MP3 caricato correttamente");
+    });
+    
+    matrixAudio.addEventListener('error', (e) => {
+        console.warn("Errore caricamento audio MP3:", e);
+        console.warn("Verifica che il file audio.mp3 sia presente nel repository GitHub");
+    });
     
     sourceToggleButton.addEventListener('click', () => {
         gameContainer.style.opacity = '0';
@@ -218,15 +228,25 @@ function initTerminalMode() {
         setTimeout(() => terminalOverlay.style.opacity = '1', 10);
         typeOutCode(original_basic_code, codeDisplay);
         
-        // Suona l'audio che funziona!
+        // Riproduce il file MP3 se l'audio non è mutato
         if (!isMuted) {
             matrixAudio.currentTime = 0;
-            matrixAudio.play().catch(e => console.warn("Errore audio:", e));
+            matrixAudio.play().catch(err => {
+                console.warn("Errore nella riproduzione audio:", err);
+                // Fallback: se l'MP3 non funziona, non fare nulla
+            });
         }
     });
 
     closeTerminalButton.addEventListener('click', () => { 
         clearTimeout(typingInterval); 
+        
+        // Ferma l'audio se in riproduzione
+        if (!matrixAudio.paused) {
+            matrixAudio.pause();
+            matrixAudio.currentTime = 0;
+        }
+        
         terminalOverlay.style.opacity = '0'; 
         setTimeout(() => { 
             terminalOverlay.style.display = 'none'; 
