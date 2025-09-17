@@ -1,3 +1,25 @@
+/* In cima al file, prima di tutto il resto */
+#tuning-panel {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background-color: rgba(27, 38, 59, 0.9);
+    border: 1px solid #778da9;
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 1000;
+    font-family: sans-serif;
+    font-size: 12px;
+    color: white;
+    display: none; /* Nascosto di default */
+}
+#tuning-panel div { margin-bottom: 5px; }
+#tuning-panel label { display: inline-block; width: 60px; }
+#tuning-panel input { width: 60px; }
+#tuning-panel span { margin-left: 5px; font-weight: bold; color: #ffca3a; }
+
+/* ...tutto il resto del CSS rimane identico a prima... */
+
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
 body {
@@ -36,16 +58,10 @@ body {
 
 #screen-overlay {
     position: absolute;
-    top: 12%;
-    /* --- ULTERIORE SPOSTAMENTO A SINISTRA (v2.3) --- */
-    left: 1%;      /* Spostato ulteriormente a sinistra */
-    width: 62%;
-    height: 35%;
-    
+    /* I valori ora sono gestiti da JavaScript */
     background-color: rgba(14, 45, 5, 0.75);
     border-radius: 3px;
     padding: 5px;
-    
     display: flex;
     flex-direction: column;
     justify-content: space-between;
