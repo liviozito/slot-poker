@@ -137,7 +137,25 @@ async function saveScore(name, score) {
         console.error('Errore nel salvataggio su Firebase:', e);
     }
 }
-    async function displayLeaderboard() { leaderboardList.innerHTML = '<li>Caricamento...</li>'; const leaderboard = await getLeaderboard(); leaderboardList.innerHTML = ''; if (leaderboard.length === 0) { leaderboardList.innerHTML = '<li>Nessun punteggio ancora.</li>'; } else { leaderboard.slice(0, MAX_LEADERBOARD_ENTRIES).forEach((entry, index) => { const li = document.createElement('li'); li.textContent = `${entry.name}: ${entry.score} p. (${entry.date})`; if (index === 0) li.classList.add('top-score'); leaderboardList.appendChild(li); }); } showSection('leaderboard-section'); updateActionButton('Gioca Ancora', showNameScreen); }
+    async function displayLeaderboard() {
+    leaderboardList.innerHTML = '<li>Caricamento...</li>';
+    const leaderboard = await getLeaderboard();
+    leaderboardList.innerHTML = '';
+    if (leaderboard.length === 0) {
+        leaderboardList.innerHTML = '<li>Nessun punteggio ancora.</li>';
+    } else {
+        leaderboard.slice(0, MAX_LEADERBOARD_ENTRIES).forEach((entry, index) => {
+            const li = document.createElement('li');
+            li.textContent = `${entry.name}: ${entry.score} p. (${entry.date})`;
+            if (index === 0) li.classList.add('top-score');
+            leaderboardList.appendChild(li);
+        });
+    }
+    showSection('leaderboard-section');
+    // Mostra il bottone "Gioca Ancora" e collega la funzione di avvio partita
+    actionButton.style.display = 'inline-block';
+    updateActionButton('Gioca Ancora', showNameScreen);
+}
     function showNameScreen() { playerNameInput.value = localStorage.getItem('slotPokerLastName') || ''; showSection('name-input-section'); updateActionButton('Inizia a Giocare', startGame); }
     function updateActionButton(text, action) { actionButton.textContent = text; if (currentAction) actionButton.removeEventListener('click', currentAction); currentAction = action; actionButton.addEventListener('click', currentAction); }
     function startGame() { playerName = playerNameInput.value.trim(); if (playerName === '') { alert('Per favore, inserisci il tuo nome!'); return; } if (!audioCtx && !isMuted) initAudio(); localStorage.setItem('slotPokerLastName', playerName); handNumber = 1; totalScore = 0; showSection('game-section'); dealHand(); }
