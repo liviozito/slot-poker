@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- CONFIGURAZIONE E COSTANTI ---
     const SILO_ID = 'fef8244a-32a1-49b4-8554-115925117c9f';
-    const API_KEY = 'dqbKXp5bWCc8D6hHAq23GhuBer2Gd2qFs813iBQYXT';
+    const API_KEY = 'u0VUAKTKrki8rIBXnThaghXE5WHxqGXCRNpQjcW6bM';
     const SILO_URL = `https://api.jsonsilo.com/${SILO_ID}`;
     const DECK = ['7', '8', '9', 'D', 'J', 'Q', 'K', 'A'];
     const CARD_VALUES = { '7': 7, '8': 8, '9': 9, 'D': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14 };
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeTerminalButton = document.getElementById('close-terminal-button');
     
     // --- VARIABILI DI STATO ---
-    let playerName = '', isShift = false, audioCtx, isMuted = true;
+    let playerName = '', isShift = false, audioCtx, isMuted = false;
     let currentHand = [], handNumber = 1, totalScore = 0, gamePhase = 'deal', drawCount = 0;
     let typingInterval = null, currentAction = null;
 
@@ -99,7 +99,27 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateDisplay() { handInfo.textContent = `Mano: ${handNumber}/5`; scoreInfo.textContent = `Punteggio: ${totalScore}`; cardElements.forEach((el, i) => { el.textContent = currentHand[i] || ''; }); }
     function showSection(sectionId) { ['name-input-section', 'game-section', 'leaderboard-section'].forEach(id => { document.getElementById(id).style.display = 'none'; }); document.getElementById(sectionId).style.display = 'flex'; virtualKeyboard.style.display = (sectionId === 'name-input-section') ? 'flex' : 'none'; }
     async function getLeaderboard() { try { const response = await fetch(SILO_URL); if (response.status === 404) { console.log("Silo vuoto, classifica inizializzata."); return []; } if (!response.ok) { console.error("Errore API GET:", response.status, await response.text()); return []; } const data = await response.json(); return data.leaderboard || []; } catch (e) { console.error("Errore di rete nel caricare la classifica:", e); return []; } }
-    async function saveScore(name, score) { let leaderboard = await getLeaderboard(); const dateString = new Date().toLocaleDateString('it-IT'); leaderboard.push({ name, score, date: dateString }); leaderboard.sort((a, b) => b.score - a.score); try { const response = await fetch(SILO_URL, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-API-KEY': API_KEY }, body: JSON.stringify({ leaderboard: leaderboard.slice(0, 10) }) }); if (!response.ok) { console.error("Errore API PUT:", response.status, await response.text()); } else { console.log("Punteggio salvato con successo!"); } } catch (e) { console.error("Errore di rete nel salvare la classifica:", e); } }
+    async function saveScore(name, score) {
+    let leaderboard = await getLeaderboard();
+    const dateString = new Date().toLocaleDateString('it-IT');
+    leaderboard.push({ name, score, date: dateString });
+    leaderboard.sort((a, b) => b.score - a.score);
+    try {
+        console.log('Salvo leaderboard:', leaderboard);
+        const res = await fetch(SILO_URL, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': API_KEY
+            },
+            body: JSON.stringify(leaderboard)
+        });
+        console.log('Risposta salvataggio:', res);
+        if (!res.ok) throw new Error('Errore salvataggio');
+    } catch (e) {
+        console.error('Errore nel salvataggio:', e);
+    }
+}
     async function displayLeaderboard() { leaderboardList.innerHTML = '<li>Caricamento...</li>'; const leaderboard = await getLeaderboard(); leaderboardList.innerHTML = ''; if (leaderboard.length === 0) { leaderboardList.innerHTML = '<li>Nessun punteggio ancora.</li>'; } else { leaderboard.slice(0, MAX_LEADERBOARD_ENTRIES).forEach((entry, index) => { const li = document.createElement('li'); li.textContent = `${entry.name}: ${entry.score} p. (${entry.date})`; if (index === 0) li.classList.add('top-score'); leaderboardList.appendChild(li); }); } showSection('leaderboard-section'); updateActionButton('Gioca Ancora', showNameScreen); }
     function showNameScreen() { playerNameInput.value = localStorage.getItem('slotPokerLastName') || ''; showSection('name-input-section'); updateActionButton('Inizia a Giocare', startGame); }
     function updateActionButton(text, action) { actionButton.textContent = text; if (currentAction) actionButton.removeEventListener('click', currentAction); currentAction = action; actionButton.addEventListener('click', currentAction); }
@@ -165,8 +185,17 @@ document.addEventListener('DOMContentLoaded', () => {
         initTuningMode();
         initTerminalMode();
         showNameScreen();
-        
-        soundToggleButton.addEventListener('click', () => { isMuted = !isMuted; soundToggleButton.textContent = isMuted ? '🔇' : '🔊'; if (!isMuted && !audioCtx) { initAudio(); } if (!isMuted) playSound('click'); });
+
+        // Imposta icona audio attiva all'avvio
+        soundToggleButton.textContent = '🔊';
+
+        soundToggleButton.addEventListener('click', () => {
+            isMuted = !isMuted;
+            soundToggleButton.textContent = isMuted ? '🔇' : '🔊';
+            if (!isMuted && !audioCtx) { initAudio(); }
+            if (!isMuted) playSound('click');
+        });
+
         cardElements.forEach(card => card.addEventListener('click', () => { if (gamePhase === 'deal') { card.classList.toggle('selected'); playSound('click'); } }));
         playerNameInput.addEventListener('input', () => { playerName = playerNameInput.value; });
         playerNameInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); actionButton.click(); } });
