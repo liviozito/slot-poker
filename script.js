@@ -12,8 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
         screenOverlay.style.height = `${screenConfig.height}%`;
         gameContainer.style.transform = `scale(${screenConfig.zoom / 100})`;
     }
-    
-    // --- Logica Click-outside-to-close (v2.9) ---
+
     const tuningToggle = document.getElementById('tuning-toggle-button');
     const panel = document.getElementById('tuning-panel');
     
@@ -29,10 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const isVisible = panel.style.display === 'block';
             panel.style.display = isVisible ? 'none' : 'block';
             if (!isVisible) {
-                // Aggiungi l'listener solo quando il pannello si apre
                 setTimeout(() => window.addEventListener('click', closePanelOnClickOutside), 0);
             } else {
-                // Rimuovilo quando si chiude
                 window.removeEventListener('click', closePanelOnClickOutside);
             }
         });
@@ -43,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <div><label for="width">Width:</label> <input type="range" id="width" min="0" max="100" value="${screenConfig.width}"> <span id="width-val">${screenConfig.width}%</span></div>
             <div><label for="height">Height:</label> <input type="range" id="height" min="0" max="100" value="${screenConfig.height}"> <span id="height-val">${screenConfig.height}%</span></div>
             <div><label for="zoom">Zoom:</label> <input type="range" id="zoom" min="50" max="150" value="${screenConfig.zoom}"> <span id="zoom-val">${screenConfig.zoom}%</span></div>
-            <button id="debug-sound-button">Test Suono</button>
         `;
         ['top', 'left', 'width', 'height', 'zoom'].forEach(prop => {
             const slider = document.getElementById(prop);
@@ -54,55 +50,51 @@ document.addEventListener('DOMContentLoaded', () => {
                 applyStyles();
             });
         });
-        // Aggiungi la logica al pulsante di debug
-        document.getElementById('debug-sound-button').addEventListener('click', () => {
-            console.log("Tentativo di sblocco audio e riproduzione 'click'...");
-            unlockAudio();
-            playSound('click');
-        });
     }
 
-    // --- GESTIONE SUONI (v2.9 - NUOVO APPROCCIO) ---
+    // --- GESTIONE SUONI (v3.0 - Approccio con Mute/Unmute) ---
+    const soundToggleButton = document.getElementById('sound-toggle-button');
     const sounds = {
-        // Ho cambiato la fonte con file .wav, spesso più compatibili
         click: new Audio('https://sfxcontent.s3.amazonaws.com/sound-effects/UI-CLICK-1.wav'),
         spin: new Audio('https://sfxcontent.s3.amazonaws.com/sound-effects/digital-UI-fast-scroll.wav'),
         win: new Audio('https://sfxcontent.s3.amazonaws.com/sound-effects/short-success-sound-glockenspiel-treasure-video-game.wav')
     };
     
+    let isMuted = true;
     let audioUnlocked = false;
 
-    function unlockAudio() {
-        if (audioUnlocked) {
-            console.log("Audio già sbloccato.");
-            return;
-        }
-        // Questa funzione ora crea un "contesto audio" che i browser moderni richiedono.
-        // Deve essere chiamata da un'interazione diretta dell'utente (un click).
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const audioContext = new AudioContext();
-        if (audioContext.state === 'suspended') {
-            audioContext.resume();
-        }
+    function initAudio() {
+        if (audioUnlocked) return;
+        // Pre-carica i suoni mettendo il volume a 0
+        Object.values(sounds).forEach(sound => {
+            sound.volume = 0;
+            sound.play().then(() => sound.pause()).catch(() => {});
+        });
         audioUnlocked = true;
-        Object.values(sounds).forEach(sound => sound.volume = 0.5);
-        console.log("Audio sbloccato. Ora i suoni dovrebbero funzionare.");
+        console.log("Audio pre-caricato in attesa di unmute.");
     }
+    
+    soundToggleButton.addEventListener('click', () => {
+        if (!audioUnlocked) {
+            initAudio();
+        }
+        isMuted = !isMuted;
+        soundToggleButton.textContent = isMuted ? '🔇' : '🔊';
+        // Suono di conferma quando si attiva l'audio
+        if (!isMuted) {
+            playSound('click');
+        }
+    });
 
     function playSound(soundName) {
-        if (!audioUnlocked) {
-            console.log("Audio non ancora sbloccato. Impossibile riprodurre il suono.");
-            return;
-        }
-        if (sounds[soundName]) {
-            sounds[soundName].currentTime = 0;
-            sounds[soundName].play().catch(e => console.error(`Errore nel riprodurre ${soundName}:`, e));
-        }
+        if (isMuted || !sounds[soundName]) return;
+        sounds[soundName].volume = 0.5;
+        sounds[soundName].currentTime = 0;
+        sounds[soundName].play().catch(e => console.error(`Errore audio: ${e}`));
     }
     
     // --- Il resto del codice rimane quasi identico ---
     
-    // Elementi dell'interfaccia
     const cardElements = Array.from({ length: 5 }, (_, i) => document.getElementById(`card-${i}`));
     const messageBox = document.getElementById('message-box');
     const handInfo = document.getElementById('hand-info');
@@ -201,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startGame() {
-        unlockAudio(); // Lo sblocco audio è la PRIMA cosa che facciamo
+        // La logica di sblocco audio è ora gestita dal pulsante Mute/Unmute
         playerName = playerNameInput.value.trim();
         if (playerName === '') {
             alert('Per favore, inserisci il tuo nome per iniziare!');
