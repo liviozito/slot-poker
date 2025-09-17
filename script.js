@@ -38,33 +38,44 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- GESTIONE SUONI (v2.7) ---
+    // --- GESTIONE SUONI (v2.8) ---
     const sounds = {
         click: new Audio('https://cdn.freesound.org/previews/253/253886_4486188-lq.mp3'),
         spin: new Audio('https://cdn.freesound.org/previews/399/399303_5121236-lq.mp3'),
         win: new Audio('https://cdn.freesound.org/previews/270/270319_5121236-lq.mp3')
     };
     
+    let audioContext;
     let audioUnlocked = false;
+
     function unlockAudio() {
         if (audioUnlocked) return;
-        Object.values(sounds).forEach(sound => {
-            sound.volume = 0;
-            sound.play().catch(() => {});
-            sound.pause();
-            sound.currentTime = 0;
-            sound.volume = 0.5;
-        });
-        audioUnlocked = true;
+        try {
+            // Crea un AudioContext solo dopo un'interazione dell'utente
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            // Sblocca l'audio sui browser moderni
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+            Object.values(sounds).forEach(sound => sound.volume = 0.5);
+            audioUnlocked = true;
+            console.log("Audio sbloccato con successo.");
+        } catch (e) {
+            console.error("Errore nello sblocco dell'audio:", e);
+        }
     }
 
     function playSound(soundName) {
         if (!audioUnlocked || !sounds[soundName]) return;
         sounds[soundName].currentTime = 0;
-        sounds[soundName].play().catch(e => console.error("Errore audio:", e));
+        sounds[soundName].play().catch(e => console.error("Errore nella riproduzione del suono:", e));
     }
 
-    // --- Elementi dell'interfaccia ---
+    // --- Il resto del codice rimane identico ---
+    
+    // Elementi dell'interfaccia
     const cardElements = Array.from({ length: 5 }, (_, i) => document.getElementById(`card-${i}`));
     const messageBox = document.getElementById('message-box');
     const handInfo = document.getElementById('hand-info');
@@ -163,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startGame() {
-        unlockAudio(); // Sblocca i suoni al primo click per iniziare
+        unlockAudio();
         playerName = playerNameInput.value.trim();
         if (playerName === '') {
             alert('Per favore, inserisci il tuo nome per iniziare!');
@@ -203,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         playSound('spin');
-        actionButton.disabled = true; // Disabilita il pulsante durante l'animazione
+        actionButton.disabled = true;
         let animationCounter = 0;
         const animationInterval = setInterval(() => {
             animationCounter++;
@@ -223,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     showResult();
                 }
-                actionButton.disabled = false; // Riabilita il pulsante
+                actionButton.disabled = false;
             }
         }, 50);
     }
