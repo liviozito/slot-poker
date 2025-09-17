@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
         tuningToggle.addEventListener('click', () => {
             panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
         });
-
         panel.innerHTML = `
             <div><strong>Pannello Calibrazione</strong></div>
             <div><label for="top">Top:</label> <input type="range" id="top" min="0" max="100" value="${screenConfig.top}"> <span id="top-val">${screenConfig.top}%</span></div>
@@ -28,7 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <div><label for="height">Height:</label> <input type="range" id="height" min="0" max="100" value="${screenConfig.height}"> <span id="height-val">${screenConfig.height}%</span></div>
             <div><label for="zoom">Zoom:</label> <input type="range" id="zoom" min="50" max="150" value="${screenConfig.zoom}"> <span id="zoom-val">${screenConfig.zoom}%</span></div>
         `;
-
         ['top', 'left', 'width', 'height', 'zoom'].forEach(prop => {
             const slider = document.getElementById(prop);
             const valueSpan = document.getElementById(`${prop}-val`);
@@ -40,13 +38,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- GESTIONE SUONI ---
+    // --- GESTIONE SUONI (v2.7) ---
     const sounds = {
         click: new Audio('https://cdn.freesound.org/previews/253/253886_4486188-lq.mp3'),
         spin: new Audio('https://cdn.freesound.org/previews/399/399303_5121236-lq.mp3'),
         win: new Audio('https://cdn.freesound.org/previews/270/270319_5121236-lq.mp3')
     };
-    Object.values(sounds).forEach(sound => sound.volume = 0.5);
+    
+    let audioUnlocked = false;
+    function unlockAudio() {
+        if (audioUnlocked) return;
+        Object.values(sounds).forEach(sound => {
+            sound.volume = 0;
+            sound.play().catch(() => {});
+            sound.pause();
+            sound.currentTime = 0;
+            sound.volume = 0.5;
+        });
+        audioUnlocked = true;
+    }
+
+    function playSound(soundName) {
+        if (!audioUnlocked || !sounds[soundName]) return;
+        sounds[soundName].currentTime = 0;
+        sounds[soundName].play().catch(e => console.error("Errore audio:", e));
+    }
 
     // --- Elementi dell'interfaccia ---
     const cardElements = Array.from({ length: 5 }, (_, i) => document.getElementById(`card-${i}`));
@@ -147,6 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startGame() {
+        unlockAudio(); // Sblocca i suoni al primo click per iniziare
         playerName = playerNameInput.value.trim();
         if (playerName === '') {
             alert('Per favore, inserisci il tuo nome per iniziare!');
@@ -169,7 +186,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateActionButton('Cambia', changeCards);
     }
 
-    // --- LOGICA ANIMAZIONE E CAMBIO CARTE ---
     function animateAndChangeCards() {
         const cardsToChange = [];
         cardElements.forEach((card, index) => {
@@ -177,7 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 cardsToChange.push({ element: card, index: index });
             }
         });
-
         if (cardsToChange.length === 0) {
             drawCount++;
             if (drawCount < 3) {
@@ -187,15 +202,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             return;
         }
-
-        sounds.spin.play();
+        playSound('spin');
+        actionButton.disabled = true; // Disabilita il pulsante durante l'animazione
         let animationCounter = 0;
         const animationInterval = setInterval(() => {
             animationCounter++;
             cardsToChange.forEach(cardInfo => {
                 cardInfo.element.textContent = DECK[Math.floor(Math.random() * DECK.length)];
             });
-            if (animationCounter > 10) { // Durata dell'animazione
+            if (animationCounter > 10) {
                 clearInterval(animationInterval);
                 cardsToChange.forEach(cardInfo => {
                     currentHand[cardInfo.index] = DECK[Math.floor(Math.random() * DECK.length)];
@@ -208,8 +223,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     showResult();
                 }
+                actionButton.disabled = false; // Riabilita il pulsante
             }
-        }, 50); // Velocità dell'animazione
+        }, 50);
     }
 
     function changeCards() {
@@ -221,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
         gamePhase = 'result';
         const result = evaluateHand(currentHand);
         if (result.points > 0) {
-            sounds.win.play();
+            playSound('win');
         }
         totalScore += result.points;
         updateDisplay();
@@ -242,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
     cardElements.forEach(card => card.addEventListener('click', () => {
         if (gamePhase === 'deal') {
             card.classList.toggle('selected');
-            sounds.click.play();
+            playSound('click');
         }
     }));
 
