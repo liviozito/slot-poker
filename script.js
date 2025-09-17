@@ -3,14 +3,49 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- VARIABILI GLOBALI E CONFIGURAZIONE ---
     const original_basic_code = `1 CLS
 4 PRINT "Slot-Poker"
-... (il codice BASIC completo) ...
+5 CLEAR:A$="A23456789DJQK":P=0:Y=0:INPUT 'N. gioc. (max 4)';N:IF N>4 THEN 5
+6 CLS:DIM R(N):S=0
+10 CLS:Y=Y+1:LOCATE 0,1:PRINT Y;"°":LOCATE 0,3:PRINT P
+11 DIM A$(4):DIM I(4):FOR T=0 TO 4:X=INT(RND*6)+1:A$(T)=MID$(A$,X*2-1,2):I(T)=X
+15 LOCATE T*3+3,1:PRINT A$(T):NEXT T:B=0:C=0:D=0:E=0:F=0:L$=""
+20 K$=INKEY$:IF K$="" THEN 20
+21 IF ASC(K$)=13 THEN LOCATE 0,3:PRINT " Wait!":GOTO 30
+22 IF ASC(K$)>48 AND ASC(K$)<54 THEN 24 ELSE GOTO 20
+24 LOCATE (VAL(K$))*3,1:PRINT CHR$(135);
+25 IF K$=L$ THEN 20 ELSE L$=L$+K$:GOTO 20
+30 FOR T=1 TO LEN(L$):D$=MID$(L$,T,1)
+35 IF D$="1" THEN IF B=0 THEN B=1:K=0:GOSUB 1000
+40 IF D$="2" THEN IF C=0 THEN C=1:K=1:GOSUB 1000
+50 IF D$="3" THEN IF D=0 THEN D=1:K=2:GOSUB 1000
+60 IF D$="4" THEN IF E=0 THEN E=1:K=3:GOSUB 1000
+70 IF D$="5" THEN IF F=0 THEN F=1:K=4:GOSUB 1000
+80 NEXT T
+100 FOR T=0 TO 4:LOCATE T*3+3,1:PRINT A$(T);" ";:NEXT T:M1$=""
+105 ZZ$=STR$(I(0)*10+I(1)*10+I(2)*10+I(3)*10+I(4))
+106 IF ZZ$=" 111110" THEN CLS:M1$="Sci. mass.ma":P=P+350:GOTO 200
+107 IF ZZ$=" 11111" THEN CLS:M1$="Sci. min.ma":P=P+180:GOTO 200
+110 FOR T=LEN(ZZ$)-1 TO 1 STEP -1:Z$=MID$(ZZ$,LEN(ZZ$)-T,1)
+120 IF Z$="5" THEN M$="all":P=P+500+T*10
+130 IF Z$="4" THEN M$="Poker":P=P+400+T*10
+140 IF Z$="3" THEN M$="Tris":P=P+300+T*10
+150 IF Z$="2" THEN M$="Coppia":P=P+T*10
+160 M1$=M1$+M$:M$="":NEXT T
+170 IF M1$="Tris Coppia" THEN M1$="Full"
+175 IF M1$="Coppia Coppia" THEN M1$="d. coppia"
+180 IF M1$="Coppia Tris" THEN M1$="Full"
+200 LOCATE 0,2:PRINT M1$;" ";P:IF Y=5 THEN 500 ELSE GOTO 210
+210 O$=INKEY$:IF O$="" THEN LOCATE 0,3:PRINT " Press key":GOTO 210 ELSE GOTO 10
+500 Y=0:S=S+1:R(S)=P:P=0:IF S<N THEN 600 ELSE GOTO 10
+600 LOCATE 0,3:PRINT " Press key":A$=INKEY$:IF A$="" THEN 600
+605 CLS
+610 FOR T=1 TO N:LOCATE 0,T-1:PRINT T;".Gioc.";" R("T;):NEXT T
+620 A$=INKEY$:IF A$="" THEN 620 ELSE 1
 1000 X=INT(RND*6)+1:A$(K)=MID$(A$,X*2-1,2):I(K)=X:RETURN`;
 
     const SILO_ID = 'fef8244a-32a1-49b4-8554-115925117c9f';
     const API_KEY = 'dqbKXp5bWCc8D6hHAq23GhuBer2Gd2qFs813iBQYXT';
     const SILO_URL = `https://api.jsonsilo.com/${SILO_ID}`;
     
-    // --- RIGA MANCANTE, ORA CORRETTA (v4.0) ---
     const screenConfig = { top: 5, left: 3, width: 67, height: 60, zoom: 100 };
     
     const DECK = ['7', '8', '9', 'D', 'J', 'Q', 'K', 'A'];
@@ -65,8 +100,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- FUNZIONI DI UTILITY E INIZIALIZZAZIONE ---
     function applyStyles() { screenOverlay.style.top = `${screenConfig.top}%`; screenOverlay.style.left = `${screenConfig.left}%`; screenOverlay.style.width = `${screenConfig.width}%`; screenOverlay.style.height = `${screenConfig.height}%`; gameContainer.style.transform = `scale(${screenConfig.zoom / 100})`; }
+    
     function initTuningMode() { const closePanelOnClickOutside = (event) => { if (!tuningPanel.contains(event.target) && event.target !== tuningToggle) { tuningPanel.style.display = 'none'; window.removeEventListener('click', closePanelOnClickOutside); } }; tuningToggle.addEventListener('click', () => { const isVisible = tuningPanel.style.display === 'block'; tuningPanel.style.display = isVisible ? 'none' : 'block'; if (!isVisible) { setTimeout(() => window.addEventListener('click', closePanelOnClickOutside), 0); } else { window.removeEventListener('click', closePanelOnClickOutside); } }); tuningPanel.innerHTML = `<div><strong>Pannello Calibrazione</strong></div>` + ['top', 'left', 'width', 'height', 'zoom'].map(p => `<div><label for="${p}">${p.charAt(0).toUpperCase() + p.slice(1)}:</label> <input type="range" id="${p}" min="0" max="150" value="${screenConfig[p]}"> <span id="${p}-val">${screenConfig[p]}%</span></div>`).join(''); ['top', 'left', 'width', 'height', 'zoom'].forEach(prop => { const slider = document.getElementById(prop); const valueSpan = document.getElementById(`${prop}-val`); slider.addEventListener('input', () => { screenConfig[prop] = slider.value; valueSpan.textContent = `${slider.value}%`; applyStyles(); }); }); }
-    function initTerminalMode() { function typeOutCode(code, element, speed = 10) { let i = 0; element.innerHTML = ''; const cursor = document.createElement('span'); cursor.className = 'blinking-cursor'; element.appendChild(cursor); function type() { if (i < code.length) { element.insertBefore(document.createTextNode(code[i]), cursor); i++; typingInterval = setTimeout(type, speed); } } type(); } sourceToggleButton.addEventListener('click', () => { gameContainer.style.opacity = '0'; terminalOverlay.style.display = 'block'; setTimeout(() => terminalOverlay.style.opacity = '1', 10); typeOutCode(original_basic_code, codeDisplay); }); closeTerminalButton.addEventListener('click', () => { clearTimeout(typingInterval); terminalOverlay.style.opacity = '0'; setTimeout(() => { terminalOverlay.style.display = 'none'; gameContainer.style.opacity = '1'; }, 500); }); }
+    
+    function initTerminalMode() { function typeOutCode(code, element, speed = 15) { let i = 0; element.innerHTML = ''; const cursor = document.createElement('span'); cursor.className = 'blinking-cursor'; element.appendChild(cursor); function type() { if (i < code.length) { element.insertBefore(document.createTextNode(code[i]), cursor); i++; typingInterval = setTimeout(type, speed); } } type(); } sourceToggleButton.addEventListener('click', () => { gameContainer.style.opacity = '0'; terminalOverlay.style.display = 'block'; setTimeout(() => terminalOverlay.style.opacity = '1', 10); typeOutCode(original_basic_code, codeDisplay); }); closeTerminalButton.addEventListener('click', () => { clearTimeout(typingInterval); terminalOverlay.style.opacity = '0'; setTimeout(() => { terminalOverlay.style.display = 'none'; gameContainer.style.opacity = '1'; }, 500); }); }
 
     // Funzione di avvio principale
     function init() {
