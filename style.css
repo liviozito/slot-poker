@@ -1,8 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
 /* Stili Controlli UI */
-#top-controls { position: absolute; top: 5px; left: 5px; right: 5px; z-index: 1001; display: flex; justify-content: space-between; align-items: center; }
-#top-controls button { background: transparent; border: none; color: white; font-size: 1.8em; cursor: pointer; padding: 5px; text-shadow: 0 0 5px black; flex-basis: 33.33%; }
+#top-controls { position: absolute; top: 5px; left: 5px; right: 5px; z-index: 1001; display: flex; justify-content: space-between; align-items: center; pointer-events: none; }
+#top-controls button { background: transparent; border: none; color: white; font-size: 1.8em; cursor: pointer; padding: 5px; text-shadow: 0 0 5px black; flex-basis: 33.33%; pointer-events: all; }
 #source-toggle-button { font-family: monospace; font-size: 1.5em; text-align: center; }
 #tuning-toggle-button { text-align: left; }
 #sound-toggle-button { text-align: right; }
@@ -34,8 +34,8 @@ h1, .subtitle { margin-bottom: 5px; }
 .card { width: 18%; height: 35px; border: 1px solid #778da9; background-color: #e0e1dd; color: #0d1b2a; font-size: 1.5em; display: flex; justify-content: center; align-items: center; border-radius: 2px; cursor: pointer; transition: all 0.2s; }
 .card.selected { border-color: #ffca3a; transform: translateY(-3px); }
 #message-box { font-size: 0.9em; color: #ffca3a; width: 100%; height: 2.5em; display: flex; justify-content: center; align-items: center; background-color: rgba(0, 0, 0, 0.7); border-radius: 2px; box-sizing: border-box; padding: 0 3px; }
-
-#main-controls { position: absolute; bottom: 22%; left: 0; right: 0; height: 28px; }
+#main-controls { position: absolute; bottom: 18%; left: 0; right: 0; height: 28px; pointer-events: none;}
+#main-controls button { pointer-events: all; }
 button { font-size: 1em; padding: 3px 10px; background-color: #778da9; color: #e0e1dd; border: none; border-radius: 3px; cursor: pointer; }
 button:hover { background-color: #415a77; }
 #leaderboard-section h2 { font-size: 1.1em; margin: 0; color: #778da9; }
@@ -44,11 +44,11 @@ button:hover { background-color: #415a77; }
 #leaderboard-list li:last-child { border-bottom: none; }
 #leaderboard-list li.top-score { color: #ffca3a; font-weight: bold; font-size: 0.9em; }
 
-/* STILI INPUT E TASTIERA VIRTUALE (v6.0) */
+/* STILI INPUT E TASTIERA VIRTUALE */
 #name-input-section label { font-size: 1.1em; color: #778da9; margin-bottom: 10px; }
 #player-name { background-color: #0d1b2a; border: 1px solid #778da9; color: #e0e1dd; text-align: center; font-family: 'VT323', monospace; font-size: 1.5em; width: 90%; padding: 4px; border-radius: 3px; }
 #virtual-keyboard { position: absolute; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; padding: 2px; }
-.keyboard-row { display: flex; justify-content: center; }
+.keyboard-row { display: flex; justify-content: center; width: 100%; }
 .key { height: 25px; margin: 1px; border-radius: 3px; cursor: pointer; transition: background-color 0.2s; flex-grow: 1; border: 1px solid rgba(255, 255, 255, 0.4); background-color: rgba(100, 100, 100, 0.3); color: white; display: flex; justify-content: center; align-items: center; font-size: 0.8em; }
 .key:hover { background-color: rgba(255, 255, 255, 0.4); }
 .key[data-key="ENTER"] { flex-grow: 1.5; }
