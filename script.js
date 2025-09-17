@@ -98,26 +98,43 @@ document.addEventListener('DOMContentLoaded', () => {
     function evaluateHand(hand) { const counts = {}; hand.forEach(card => { counts[card] = (counts[card] || 0) + 1; }); const groups = Object.entries(counts).map(([card, count]) => ({ card, cardValue: CARD_VALUES[card], count })).sort((a, b) => (b.count - a.count) || (b.cardValue - a.cardValue)); const mainGroup = groups[0]; if (mainGroup.count === 4) return { name: "Poker", points: 400 + mainGroup.cardValue * 4 }; if (mainGroup.count === 3 && groups[1]?.count === 2) return { name: "Full", points: 320 + mainGroup.cardValue * 3 + groups[1].cardValue * 2 }; if (mainGroup.count === 3) return { name: "Tris", points: 300 + mainGroup.cardValue * 3 }; if (mainGroup.count === 2 && groups[1]?.count === 2) return { name: "Doppia Coppia", points: 200 + mainGroup.cardValue * 2 + groups[1].cardValue * 2 }; if (mainGroup.count === 2) return { name: "Coppia", points: 100 + mainGroup.cardValue * 2 }; return { name: "Carta Alta", points: Math.max(...hand.map(c => CARD_VALUES[c])) }; }
     function updateDisplay() { handInfo.textContent = `Mano: ${handNumber}/5`; scoreInfo.textContent = `Punteggio: ${totalScore}`; cardElements.forEach((el, i) => { el.textContent = currentHand[i] || ''; }); }
     function showSection(sectionId) { ['name-input-section', 'game-section', 'leaderboard-section'].forEach(id => { document.getElementById(id).style.display = 'none'; }); document.getElementById(sectionId).style.display = 'flex'; virtualKeyboard.style.display = (sectionId === 'name-input-section') ? 'flex' : 'none'; }
-    async function getLeaderboard() { try { const response = await fetch(SILO_URL); if (response.status === 404) { console.log("Silo vuoto, classifica inizializzata."); return []; } if (!response.ok) { console.error("Errore API GET:", response.status, await response.text()); return []; } const data = await response.json(); return data.leaderboard || []; } catch (e) { console.error("Errore di rete nel caricare la classifica:", e); return []; } }
-    async function saveScore(name, score) {
+    const FIREBASE_URL = 'https://slotpokerlivio-default-rtdb.firebaseio.com/leaderboard.json';
+
+// Recupera la leaderboard da Firebase
+async function getLeaderboard() {
+    try {
+        const response = await fetch(FIREBASE_URL);
+        if (!response.ok) {
+            console.error("Errore API GET Firebase:", response.status, await response.text());
+            return [];
+        }
+        const data = await response.json();
+        // Firebase restituisce un oggetto, lo trasformiamo in array
+        if (!data) return [];
+        return Object.values(data);
+    } catch (e) {
+        console.error("Errore di rete nel caricare la classifica:", e);
+        return [];
+    }
+}
+
+// Salva il punteggio su Firebase
+async function saveScore(name, score) {
     let leaderboard = await getLeaderboard();
     const dateString = new Date().toLocaleDateString('it-IT');
     leaderboard.push({ name, score, date: dateString });
     leaderboard.sort((a, b) => b.score - a.score);
+
     try {
-        console.log('Salvo leaderboard:', leaderboard);
-        const res = await fetch(SILO_URL, {
+        // Sovrascrivi tutta la leaderboard
+        const res = await fetch(FIREBASE_URL, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-api-key': API_KEY
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(leaderboard)
         });
-        console.log('Risposta salvataggio:', res);
-        if (!res.ok) throw new Error('Errore salvataggio');
+        if (!res.ok) throw new Error('Errore salvataggio Firebase');
     } catch (e) {
-        console.error('Errore nel salvataggio:', e);
+        console.error('Errore nel salvataggio su Firebase:', e);
     }
 }
     async function displayLeaderboard() { leaderboardList.innerHTML = '<li>Caricamento...</li>'; const leaderboard = await getLeaderboard(); leaderboardList.innerHTML = ''; if (leaderboard.length === 0) { leaderboardList.innerHTML = '<li>Nessun punteggio ancora.</li>'; } else { leaderboard.slice(0, MAX_LEADERBOARD_ENTRIES).forEach((entry, index) => { const li = document.createElement('li'); li.textContent = `${entry.name}: ${entry.score} p. (${entry.date})`; if (index === 0) li.classList.add('top-score'); leaderboardList.appendChild(li); }); } showSection('leaderboard-section'); updateActionButton('Gioca Ancora', showNameScreen); }
