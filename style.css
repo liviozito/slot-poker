@@ -1,5 +1,40 @@
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
+/* --- Stili per Pannello Calibrazione --- */
+#tuning-toggle-button {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1001;
+    background: #1b263b;
+    border: 1px solid #778da9;
+    color: white;
+    font-size: 1.5em;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+#tuning-panel {
+    position: fixed;
+    top: 60px;
+    right: 10px;
+    background-color: rgba(27, 38, 59, 0.95);
+    border: 1px solid #778da9;
+    padding: 10px;
+    border-radius: 5px;
+    z-index: 1000;
+    font-family: sans-serif;
+    font-size: 12px;
+    color: white;
+    display: none;
+}
+#tuning-panel div { margin-bottom: 5px; }
+#tuning-panel label { display: inline-block; width: 60px; }
+#tuning-panel input { width: 100px; }
+#tuning-panel span { margin-left: 5px; font-weight: bold; color: #ffca3a; }
+
+/* --- Stili di Base --- */
 body {
     font-family: 'VT323', monospace;
     color: #e0e1dd;
@@ -17,9 +52,10 @@ body {
     border-radius: 10px;
     padding: 20px;
     width: 90%;
-    max-width: 450px; /* Leggermente allargato */
+    max-width: 450px;
     text-align: center;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    transition: transform 0.3s; /* Transizione per lo zoom */
 }
 
 #casio-body {
@@ -29,14 +65,17 @@ body {
 
 .header-image {
     width: 100%;
-    max-width: 420px; /* Adattato al nuovo contenitore */
+    max-width: 420px;
     height: auto;
     display: block;
 }
 
 #screen-overlay {
     position: absolute;
-    /* I valori ora sono gestiti da JavaScript */
+    top: 5%;
+    left: 3%;
+    width: 67%;
+    height: 60%;
     background-color: rgba(14, 45, 5, 0.75);
     border-radius: 3px;
     padding: 5px;
