@@ -1,11 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- PANNELLO DI CALIBRAZIONE (v2.4) ---
+    // --- CONFIGURAZIONE FINALE DELLO SCHERMO (v2.5) ---
     const screenConfig = {
-        top: 12,    // Spostato in alto del 10% (da 10 a 11, arrotondato)
-        left: 23,   // Spostato a destra del 10% (da 19 a 21, arrotondato)
-        width: 62,
-        height: 38.5, // Allungato del 10% (da 35 a 38.5)
+        top: 5,
+        left: 3,
+        width: 67,
+        height: 60,
     };
     const screenOverlay = document.getElementById('screen-overlay');
 
@@ -13,34 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
         screenOverlay.style.top = `${screenConfig.top}%`;
         screenOverlay.style.left = `${screenConfig.left}%`;
         screenOverlay.style.width = `${screenConfig.width}%`;
-        screenOverlay.style.height = `${screenConfig.height}%`;
+        screenOverlay.style.height = `${screenOverlay.height}%`;
     }
-
-    function initTuningMode() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('tuning') !== 'true') return;
-
-        const panel = document.getElementById('tuning-panel');
-        panel.style.display = 'block';
-        panel.innerHTML = `
-            <div><strong>Pannello Calibrazione</strong></div>
-            <div><label for="top">Top:</label> <input type="range" id="top" min="0" max="100" value="${screenConfig.top}"> <span id="top-val">${screenConfig.top}%</span></div>
-            <div><label for="left">Left:</label> <input type="range" id="left" min="0" max="100" value="${screenConfig.left}"> <span id="left-val">${screenConfig.left}%</span></div>
-            <div><label for="width">Width:</label> <input type="range" id="width" min="0" max="100" value="${screenConfig.width}"> <span id="width-val">${screenConfig.width}%</span></div>
-            <div><label for="height">Height:</label> <input type="range" id="height" min="0" max="100" value="${screenConfig.height}"> <span id="height-val">${screenConfig.height}%</span></div>
-        `;
-
-        ['top', 'left', 'width', 'height'].forEach(prop => {
-            const slider = document.getElementById(prop);
-            const valueSpan = document.getElementById(`${prop}-val`);
-            slider.addEventListener('input', () => {
-                screenConfig[prop] = slider.value;
-                valueSpan.textContent = `${slider.value}%`;
-                applyStyles();
-            });
-        });
-    }
-    // --- FINE PANNELLO DI CALIBRAZIONE ---
+    // --- FINE CONFIGURAZIONE ---
 
     // --- Elementi dell'interfaccia ---
     const cardElements = Array.from({ length: 5 }, (_, i) => document.getElementById(`card-${i}`));
@@ -211,13 +186,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function init() {
-        applyStyles(); // Applica gli stili iniziali
-        initTuningMode(); // Attiva la modalità di calibrazione se richiesto
+        applyStyles(); // Applica gli stili finali all'avvio
         const lastPlayerName = localStorage.getItem('slotPokerLastName');
         if (lastPlayerName) {
             playerNameInput.value = lastPlayerName;
         }
-        displayLeaderboard();
+        showNameScreen(); // Mostra la schermata del nome e non la classifica
     }
 
     init();
