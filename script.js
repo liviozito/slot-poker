@@ -1,100 +1,66 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- CONFIGURAZIONE E CALIBRAZIONE ---
-    const screenConfig = { top: 5, left: 3, width: 67, height: 60, zoom: 100 };
-    const screenOverlay = document.getElementById('screen-overlay');
-    const gameContainer = document.getElementById('game-container');
+    // --- CONFIGURAZIONE DATABASE PUNTEGGI (v3.2 - AGGIORNATO CON I TUOI DATI) ---
+    const SILO_ID = 'slot-poker';
+    const API_KEY = 'dqbKXp5bWCc8D6hHAq23GhuBer2Gd2qFs813iBQYXT';
+    const SILO_URL = `https://www.jsonsilo.com/silo/${SILO_ID}`;
 
-    function applyStyles() {
-        screenOverlay.style.top = `${screenConfig.top}%`;
-        screenOverlay.style.left = `${screenConfig.left}%`;
-        screenOverlay.style.width = `${screenConfig.width}%`;
-        screenOverlay.style.height = `${screenConfig.height}%`;
-        gameContainer.style.transform = `scale(${screenConfig.zoom / 100})`;
-    }
-
-    const tuningToggle = document.getElementById('tuning-toggle-button');
-    const panel = document.getElementById('tuning-panel');
-    
-    function closePanelOnClickOutside(event) {
-        if (!panel.contains(event.target) && event.target !== tuningToggle) {
-            panel.style.display = 'none';
-            window.removeEventListener('click', closePanelOnClickOutside);
-        }
-    }
-
-    function initTuningMode() {
-        tuningToggle.addEventListener('click', () => {
-            const isVisible = panel.style.display === 'block';
-            panel.style.display = isVisible ? 'none' : 'block';
-            if (!isVisible) {
-                setTimeout(() => window.addEventListener('click', closePanelOnClickOutside), 0);
-            } else {
-                window.removeEventListener('click', closePanelOnClickOutside);
-            }
-        });
-        panel.innerHTML = `
-            <div><strong>Pannello Calibrazione</strong></div>
-            <div><label for="top">Top:</label> <input type="range" id="top" min="0" max="100" value="${screenConfig.top}"> <span id="top-val">${screenConfig.top}%</span></div>
-            <div><label for="left">Left:</label> <input type="range" id="left" min="0" max="100" value="${screenConfig.left}"> <span id="left-val">${screenConfig.left}%</span></div>
-            <div><label for="width">Width:</label> <input type="range" id="width" min="0" max="100" value="${screenConfig.width}"> <span id="width-val">${screenConfig.width}%</span></div>
-            <div><label for="height">Height:</label> <input type="range" id="height" min="0" max="100" value="${screenConfig.height}"> <span id="height-val">${screenConfig.height}%</span></div>
-            <div><label for="zoom">Zoom:</label> <input type="range" id="zoom" min="50" max="150" value="${screenConfig.zoom}"> <span id="zoom-val">${screenConfig.zoom}%</span></div>
-        `;
-        ['top', 'left', 'width', 'height', 'zoom'].forEach(prop => {
-            const slider = document.getElementById(prop);
-            const valueSpan = document.getElementById(`${prop}-val`);
-            slider.addEventListener('input', () => {
-                screenConfig[prop] = slider.value;
-                valueSpan.textContent = `${slider.value}%`;
-                applyStyles();
-            });
-        });
-    }
-
-    // --- GESTIONE SUONI (v3.0 - Approccio con Mute/Unmute) ---
+    // --- MOTORE AUDIO SINTETIZZATO ---
     const soundToggleButton = document.getElementById('sound-toggle-button');
-    const sounds = {
-        click: new Audio('https://sfxcontent.s3.amazonaws.com/sound-effects/UI-CLICK-1.wav'),
-        spin: new Audio('https://sfxcontent.s3.amazonaws.com/sound-effects/digital-UI-fast-scroll.wav'),
-        win: new Audio('https://sfxcontent.s3.amazonaws.com/sound-effects/short-success-sound-glockenspiel-treasure-video-game.wav')
-    };
-    
+    let audioCtx;
     let isMuted = true;
-    let audioUnlocked = false;
 
     function initAudio() {
-        if (audioUnlocked) return;
-        // Pre-carica i suoni mettendo il volume a 0
-        Object.values(sounds).forEach(sound => {
-            sound.volume = 0;
-            sound.play().then(() => sound.pause()).catch(() => {});
-        });
-        audioUnlocked = true;
-        console.log("Audio pre-caricato in attesa di unmute.");
-    }
-    
-    soundToggleButton.addEventListener('click', () => {
-        if (!audioUnlocked) {
-            initAudio();
+        if (!audioCtx) {
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.error("Web Audio API non è supportata da questo browser.");
+            }
         }
+    }
+
+    soundToggleButton.addEventListener('click', () => {
         isMuted = !isMuted;
         soundToggleButton.textContent = isMuted ? '🔇' : '🔊';
-        // Suono di conferma quando si attiva l'audio
-        if (!isMuted) {
-            playSound('click');
+        if (!isMuted && !audioCtx) {
+            initAudio(); 
         }
+        if(!isMuted) playSound('click');
     });
 
-    function playSound(soundName) {
-        if (isMuted || !sounds[soundName]) return;
-        sounds[soundName].volume = 0.5;
-        sounds[soundName].currentTime = 0;
-        sounds[soundName].play().catch(e => console.error(`Errore audio: ${e}`));
+    function playSound(type) {
+        if (isMuted || !audioCtx) return;
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+
+        switch (type) {
+            case 'click':
+                oscillator.type = 'triangle';
+                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
+                break;
+            case 'spin':
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
+                break;
+            case 'win':
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                oscillator.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.2);
+                break;
+        }
+        oscillator.start(audioCtx.currentTime);
+        oscillator.stop(audioCtx.currentTime + 0.2);
     }
     
-    // --- Il resto del codice rimane quasi identico ---
-    
+    // --- IL RESTO DEL GIOCO ---
     const cardElements = Array.from({ length: 5 }, (_, i) => document.getElementById(`card-${i}`));
     const messageBox = document.getElementById('message-box');
     const handInfo = document.getElementById('hand-info');
@@ -105,7 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerNameInput = document.getElementById('player-name');
     const leaderboardList = document.getElementById('leaderboard-list');
     const actionButton = document.getElementById('action-button');
-    const DECK = ['A', '2', '3', '4', '5', '6', '7', '8', '9', 'D', 'J', 'Q', 'K'];
+    const DECK = ['7', '8', '9', 'D', 'J', 'Q', 'K', 'A'];
+    const CARD_VALUES = { '7': 7, '8': 8, '9': 9, 'D': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14 };
     let currentHand = [];
     let handNumber = 1;
     let totalScore = 0;
@@ -117,14 +84,21 @@ document.addEventListener('DOMContentLoaded', () => {
     function evaluateHand(hand) {
         const counts = {};
         hand.forEach(card => { counts[card] = (counts[card] || 0) + 1; });
-        const vals = Object.values(counts).sort((a, b) => b - a);
-        if (vals[0] === 5) return { name: "Slot Machine!", points: 500 };
-        if (vals[0] === 4) return { name: "Poker", points: 400 };
-        if (vals[0] === 3 && vals[1] === 2) return { name: "Full", points: 320 };
-        if (vals[0] === 3) return { name: "Tris", points: 300 };
-        if (vals[0] === 2 && vals[1] === 2) return { name: "Doppia Coppia", points: 200 };
-        if (vals[0] === 2) return { name: "Coppia", points: 100 };
-        return { name: "Carta Alta", points: 0 };
+        const groups = Object.entries(counts).map(([card, count]) => ({
+            card: card,
+            cardValue: CARD_VALUES[card],
+            count: count
+        })).sort((a, b) => {
+            if (a.count !== b.count) return b.count - a.count;
+            return b.cardValue - a.cardValue;
+        });
+        const mainGroup = groups[0];
+        if (mainGroup.count === 4) return { name: "Poker", points: 400 + mainGroup.cardValue * 4 };
+        if (mainGroup.count === 3 && groups.length > 1 && groups[1].count === 2) return { name: "Full", points: 320 + mainGroup.cardValue * 3 + groups[1].cardValue * 2 };
+        if (mainGroup.count === 3) return { name: "Tris", points: 300 + mainGroup.cardValue * 3 };
+        if (mainGroup.count === 2 && groups.length > 1 && groups[1].count === 2) return { name: "Doppia Coppia", points: 200 + mainGroup.cardValue * 2 + groups[1].cardValue * 2 };
+        if (mainGroup.count === 2) return { name: "Coppia", points: 100 + mainGroup.cardValue * 2 };
+        return { name: "Carta Alta", points: Math.max(...hand.map(c => CARD_VALUES[c])) };
     }
 
     function updateDisplay() {
@@ -142,21 +116,41 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById(sectionId).style.display = 'flex';
     }
 
-    function getLeaderboard() {
-        return JSON.parse(localStorage.getItem('slotPokerLeaderboard') || '[]').sort((a, b) => b.score - a.score);
+    async function getLeaderboard() {
+        try {
+            const response = await fetch(SILO_URL);
+            if (!response.ok) return [];
+            const data = await response.json();
+            return data.leaderboard || [];
+        } catch (e) {
+            console.error("Errore nel caricare la classifica:", e);
+            return [];
+        }
     }
 
-    function saveScore(name, score) {
-        const leaderboard = getLeaderboard();
+    async function saveScore(name, score) {
+        let leaderboard = await getLeaderboard();
         const now = new Date();
         const dateString = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
         leaderboard.push({ name, score, date: dateString });
         leaderboard.sort((a, b) => b.score - a.score);
-        localStorage.setItem('slotPokerLeaderboard', JSON.stringify(leaderboard.slice(0, 10)));
+        try {
+            await fetch(SILO_URL, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-KEY': API_KEY
+                },
+                body: JSON.stringify({ leaderboard: leaderboard.slice(0, 10) })
+            });
+        } catch (e) {
+            console.error("Errore nel salvare la classifica:", e);
+        }
     }
-
-    function displayLeaderboard() {
-        const leaderboard = getLeaderboard();
+    
+    async function displayLeaderboard() {
+        leaderboardList.innerHTML = '<li>Caricamento...</li>';
+        const leaderboard = await getLeaderboard();
         leaderboardList.innerHTML = '';
         if (leaderboard.length === 0) {
             leaderboardList.innerHTML = '<li>Nessun punteggio ancora.</li>';
@@ -193,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startGame() {
-        // La logica di sblocco audio è ora gestita dal pulsante Mute/Unmute
+        if (!audioCtx && !isMuted) initAudio();
         playerName = playerNameInput.value.trim();
         if (playerName === '') {
             alert('Per favore, inserisci il tuo nome per iniziare!');
@@ -216,94 +210,4 @@ document.addEventListener('DOMContentLoaded', () => {
         updateActionButton('Cambia', changeCards);
     }
 
-    function animateAndChangeCards() {
-        const cardsToChange = [];
-        cardElements.forEach((card, index) => {
-            if (card.classList.contains('selected')) {
-                cardsToChange.push({ element: card, index: index });
-            }
-        });
-        if (cardsToChange.length === 0) {
-            drawCount++;
-            if (drawCount < 3) {
-                messageBox.textContent = `${drawCount + 1}° Cambio: Seleziona carte`;
-            } else {
-                showResult();
-            }
-            return;
-        }
-        playSound('spin');
-        actionButton.disabled = true;
-        let animationCounter = 0;
-        const animationInterval = setInterval(() => {
-            animationCounter++;
-            cardsToChange.forEach(cardInfo => {
-                cardInfo.element.textContent = DECK[Math.floor(Math.random() * DECK.length)];
-            });
-            if (animationCounter > 10) {
-                clearInterval(animationInterval);
-                cardsToChange.forEach(cardInfo => {
-                    currentHand[cardInfo.index] = DECK[Math.floor(Math.random() * DECK.length)];
-                });
-                cardElements.forEach(card => card.classList.remove('selected'));
-                updateDisplay();
-                drawCount++;
-                if (drawCount < 3) {
-                    messageBox.textContent = `${drawCount + 1}° Cambio: Seleziona carte`;
-                } else {
-                    showResult();
-                }
-                actionButton.disabled = false;
-            }
-        }, 50);
-    }
-
-    function changeCards() {
-        if (gamePhase !== 'deal') return;
-        animateAndChangeCards();
-    }
-
-    function showResult() {
-        gamePhase = 'result';
-        const result = evaluateHand(currentHand);
-        if (result.points > 0) {
-            playSound('win');
-        }
-        totalScore += result.points;
-        updateDisplay();
-        messageBox.textContent = `Risultato: ${result.name} (+${result.points} p.)`;
-        if (handNumber < 5) {
-            updateActionButton('Prossima Mano', () => {
-                handNumber++;
-                dealHand();
-            });
-        } else {
-            actionButton.style.display = 'none';
-            messageBox.textContent += ` | Partita Finita!`;
-            saveScore(playerName, totalScore);
-            setTimeout(displayLeaderboard, 2000);
-        }
-    }
-
-    cardElements.forEach(card => card.addEventListener('click', () => {
-        if (gamePhase === 'deal') {
-            card.classList.toggle('selected');
-            playSound('click');
-        }
-    }));
-
-    playerNameInput.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            actionButton.click();
-        }
-    });
-
-    function init() {
-        applyStyles();
-        initTuningMode();
-        showNameScreen();
-    }
-
-    init();
-});
+    function animateAnd
