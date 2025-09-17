@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- CONFIGURAZIONE DATABASE PUNTEGGI (v3.2 - AGGIORNATO CON I TUOI DATI) ---
+    // --- CONFIGURAZIONE DATABASE PUNTEGGI ---
     const SILO_ID = 'slot-poker';
     const API_KEY = 'dqbKXp5bWCc8D6hHAq23GhuBer2Gd2qFs813iBQYXT';
     const SILO_URL = `https://www.jsonsilo.com/silo/${SILO_ID}`;
@@ -24,43 +24,53 @@ document.addEventListener('DOMContentLoaded', () => {
         isMuted = !isMuted;
         soundToggleButton.textContent = isMuted ? '🔇' : '🔊';
         if (!isMuted && !audioCtx) {
-            initAudio(); 
+            initAudio();
         }
         if(!isMuted) playSound('click');
     });
 
     function playSound(type) {
         if (isMuted || !audioCtx) return;
-        const oscillator = audioCtx.createOscillator();
+        const now = audioCtx.currentTime;
         const gainNode = audioCtx.createGain();
-        oscillator.connect(gainNode);
         gainNode.connect(audioCtx.destination);
-        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.2, now);
 
-        switch (type) {
-            case 'click':
-                oscillator.type = 'triangle';
-                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
-                break;
-            case 'spin':
-                oscillator.type = 'sawtooth';
-                oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
-                oscillator.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
-                gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
-                break;
-            case 'win':
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(523.25, audioCtx.currentTime);
-                oscillator.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
-                gainNode.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.2);
-                break;
+        if (type === 'click') {
+            const oscillator = audioCtx.createOscillator();
+            oscillator.connect(gainNode);
+            oscillator.type = 'triangle';
+            oscillator.frequency.setValueAtTime(880, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
+            oscillator.start(now);
+            oscillator.stop(now + 0.1);
+        } else if (type === 'win') {
+            const oscillator = audioCtx.createOscillator();
+            oscillator.connect(gainNode);
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(523.25, now);
+            oscillator.frequency.setValueAtTime(659.25, now + 0.1);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+            oscillator.start(now);
+            oscillator.stop(now + 0.2);
+        } else if (type === 'spin') {
+            // --- NUOVO SUONO SLOT MACHINE (v3.3) ---
+            let tickTime = 0;
+            for (let i = 0; i < 5; i++) {
+                const osc = audioCtx.createOscillator();
+                osc.connect(gainNode);
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(1500, now + tickTime);
+                gainNode.gain.setValueAtTime(0.2, now + tickTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, now + tickTime + 0.05);
+                osc.start(now + tickTime);
+                osc.stop(now + tickTime + 0.05);
+                tickTime += 0.04;
+            }
         }
-        oscillator.start(audioCtx.currentTime);
-        oscillator.stop(audioCtx.currentTime + 0.2);
     }
     
-    // --- IL RESTO DEL GIOCO ---
+    // --- IL RESTO DEL GIOCO (invariato)---
     const cardElements = Array.from({ length: 5 }, (_, i) => document.getElementById(`card-${i}`));
     const messageBox = document.getElementById('message-box');
     const handInfo = document.getElementById('hand-info');
