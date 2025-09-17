@@ -12,12 +12,29 @@ document.addEventListener('DOMContentLoaded', () => {
         screenOverlay.style.height = `${screenConfig.height}%`;
         gameContainer.style.transform = `scale(${screenConfig.zoom / 100})`;
     }
+    
+    // --- Logica Click-outside-to-close (v2.9) ---
+    const tuningToggle = document.getElementById('tuning-toggle-button');
+    const panel = document.getElementById('tuning-panel');
+    
+    function closePanelOnClickOutside(event) {
+        if (!panel.contains(event.target) && event.target !== tuningToggle) {
+            panel.style.display = 'none';
+            window.removeEventListener('click', closePanelOnClickOutside);
+        }
+    }
 
     function initTuningMode() {
-        const tuningToggle = document.getElementById('tuning-toggle-button');
-        const panel = document.getElementById('tuning-panel');
         tuningToggle.addEventListener('click', () => {
-            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+            const isVisible = panel.style.display === 'block';
+            panel.style.display = isVisible ? 'none' : 'block';
+            if (!isVisible) {
+                // Aggiungi l'listener solo quando il pannello si apre
+                setTimeout(() => window.addEventListener('click', closePanelOnClickOutside), 0);
+            } else {
+                // Rimuovilo quando si chiude
+                window.removeEventListener('click', closePanelOnClickOutside);
+            }
         });
         panel.innerHTML = `
             <div><strong>Pannello Calibrazione</strong></div>
@@ -26,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div><label for="width">Width:</label> <input type="range" id="width" min="0" max="100" value="${screenConfig.width}"> <span id="width-val">${screenConfig.width}%</span></div>
             <div><label for="height">Height:</label> <input type="range" id="height" min="0" max="100" value="${screenConfig.height}"> <span id="height-val">${screenConfig.height}%</span></div>
             <div><label for="zoom">Zoom:</label> <input type="range" id="zoom" min="50" max="150" value="${screenConfig.zoom}"> <span id="zoom-val">${screenConfig.zoom}%</span></div>
+            <button id="debug-sound-button">Test Suono</button>
         `;
         ['top', 'left', 'width', 'height', 'zoom'].forEach(prop => {
             const slider = document.getElementById(prop);
@@ -36,44 +54,53 @@ document.addEventListener('DOMContentLoaded', () => {
                 applyStyles();
             });
         });
+        // Aggiungi la logica al pulsante di debug
+        document.getElementById('debug-sound-button').addEventListener('click', () => {
+            console.log("Tentativo di sblocco audio e riproduzione 'click'...");
+            unlockAudio();
+            playSound('click');
+        });
     }
 
-    // --- GESTIONE SUONI (v2.8) ---
+    // --- GESTIONE SUONI (v2.9 - NUOVO APPROCCIO) ---
     const sounds = {
-        click: new Audio('https://cdn.freesound.org/previews/253/253886_4486188-lq.mp3'),
-        spin: new Audio('https://cdn.freesound.org/previews/399/399303_5121236-lq.mp3'),
-        win: new Audio('https://cdn.freesound.org/previews/270/270319_5121236-lq.mp3')
+        // Ho cambiato la fonte con file .wav, spesso più compatibili
+        click: new Audio('https://sfxcontent.s3.amazonaws.com/sound-effects/UI-CLICK-1.wav'),
+        spin: new Audio('https://sfxcontent.s3.amazonaws.com/sound-effects/digital-UI-fast-scroll.wav'),
+        win: new Audio('https://sfxcontent.s3.amazonaws.com/sound-effects/short-success-sound-glockenspiel-treasure-video-game.wav')
     };
     
-    let audioContext;
     let audioUnlocked = false;
 
     function unlockAudio() {
-        if (audioUnlocked) return;
-        try {
-            // Crea un AudioContext solo dopo un'interazione dell'utente
-            if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            // Sblocca l'audio sui browser moderni
-            if (audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
-            Object.values(sounds).forEach(sound => sound.volume = 0.5);
-            audioUnlocked = true;
-            console.log("Audio sbloccato con successo.");
-        } catch (e) {
-            console.error("Errore nello sblocco dell'audio:", e);
+        if (audioUnlocked) {
+            console.log("Audio già sbloccato.");
+            return;
         }
+        // Questa funzione ora crea un "contesto audio" che i browser moderni richiedono.
+        // Deve essere chiamata da un'interazione diretta dell'utente (un click).
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioContext = new AudioContext();
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        audioUnlocked = true;
+        Object.values(sounds).forEach(sound => sound.volume = 0.5);
+        console.log("Audio sbloccato. Ora i suoni dovrebbero funzionare.");
     }
 
     function playSound(soundName) {
-        if (!audioUnlocked || !sounds[soundName]) return;
-        sounds[soundName].currentTime = 0;
-        sounds[soundName].play().catch(e => console.error("Errore nella riproduzione del suono:", e));
+        if (!audioUnlocked) {
+            console.log("Audio non ancora sbloccato. Impossibile riprodurre il suono.");
+            return;
+        }
+        if (sounds[soundName]) {
+            sounds[soundName].currentTime = 0;
+            sounds[soundName].play().catch(e => console.error(`Errore nel riprodurre ${soundName}:`, e));
+        }
     }
-
-    // --- Il resto del codice rimane identico ---
+    
+    // --- Il resto del codice rimane quasi identico ---
     
     // Elementi dell'interfaccia
     const cardElements = Array.from({ length: 5 }, (_, i) => document.getElementById(`card-${i}`));
@@ -174,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startGame() {
-        unlockAudio();
+        unlockAudio(); // Lo sblocco audio è la PRIMA cosa che facciamo
         playerName = playerNameInput.value.trim();
         if (playerName === '') {
             alert('Per favore, inserisci il tuo nome per iniziare!');
