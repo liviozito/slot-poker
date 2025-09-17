@@ -210,4 +210,93 @@ document.addEventListener('DOMContentLoaded', () => {
         updateActionButton('Cambia', changeCards);
     }
 
-    function animateAnd
+    function animateAndChangeCards() {
+        const cardsToChange = [];
+        cardElements.forEach((card, index) => {
+            if (card.classList.contains('selected')) {
+                cardsToChange.push({ element: card, index: index });
+            }
+        });
+        if (cardsToChange.length === 0) {
+            drawCount++;
+            if (drawCount < 3) {
+                messageBox.textContent = `${drawCount + 1}° Cambio: Seleziona carte`;
+            } else {
+                showResult();
+            }
+            return;
+        }
+        playSound('spin');
+        actionButton.disabled = true;
+        let animationCounter = 0;
+        const animationInterval = setInterval(() => {
+            animationCounter++;
+            cardsToChange.forEach(cardInfo => {
+                cardInfo.element.textContent = DECK[Math.floor(Math.random() * DECK.length)];
+            });
+            if (animationCounter > 10) {
+                clearInterval(animationInterval);
+                cardsToChange.forEach(cardInfo => {
+                    currentHand[cardInfo.index] = DECK[Math.floor(Math.random() * DECK.length)];
+                });
+                cardElements.forEach(card => card.classList.remove('selected'));
+                updateDisplay();
+                drawCount++;
+                if (drawCount < 3) {
+                    messageBox.textContent = `${drawCount + 1}° Cambio: Seleziona carte`;
+                } else {
+                    showResult();
+                }
+                actionButton.disabled = false;
+            }
+        }, 50);
+    }
+
+    function changeCards() {
+        if (gamePhase !== 'deal') return;
+        animateAndChangeCards();
+    }
+
+    function showResult() {
+        gamePhase = 'result';
+        const result = evaluateHand(currentHand);
+        if (result.points > 100) {
+            playSound('win');
+        }
+        totalScore += result.points;
+        updateDisplay();
+        messageBox.textContent = `Risultato: ${result.name} (+${result.points} p.)`;
+        if (handNumber < 5) {
+            updateActionButton('Prossima Mano', () => {
+                handNumber++;
+                dealHand();
+            });
+        } else {
+            actionButton.style.display = 'none';
+            messageBox.textContent += ` | Partita Finita!`;
+            saveScore(playerName, totalScore).then(() => {
+                setTimeout(displayLeaderboard, 2000);
+            });
+        }
+    }
+
+    cardElements.forEach(card => card.addEventListener('click', () => {
+        if (gamePhase === 'deal') {
+            card.classList.toggle('selected');
+            playSound('click');
+        }
+    }));
+
+    playerNameInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            actionButton.click();
+        }
+    });
+
+    function init() {
+        showNameScreen();
+    }
+
+    init();
+});
